@@ -1,9 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FileText, FileCheck } from "lucide-react";
 import { notFound } from "next/navigation";
 import CopyPromptButton from "@/components/CopyPromptButton";
 import Sidebar from "@/components/Sidebar";
+import { StatusBadge } from "@/components/StatusBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +65,42 @@ export default async function VisitaDetallePage({
           <p className="text-text-dim text-sm">{cliente.direccion}</p>
         )}
 
+        <div className="flex flex-wrap items-center gap-2">
+          {visita.tipo_trabajo && (
+            <span className="text-xs font-medium bg-surface border border-border rounded-full px-3 py-1">
+              {visita.tipo_trabajo}
+            </span>
+          )}
+          {visita.estado_seguimiento && (
+            <StatusBadge status={visita.estado_seguimiento} />
+          )}
+          {(visita.etiquetas ?? []).map((et: string) => (
+            <span
+              key={et}
+              className="text-xs bg-accent/10 text-accent rounded-full px-3 py-1"
+            >
+              {et}
+            </span>
+          ))}
+        </div>
+
+        <section className="grid grid-cols-2 gap-3">
+          <Link
+            href={`/visita/${visita.id}/imprimir`}
+            className="flex items-center justify-center gap-2 rounded-xl border border-border bg-surface py-3 text-sm font-medium"
+          >
+            <FileText size={16} /> Respaldo interno
+          </Link>
+          {visita.requiere_informe_cliente && (
+            <Link
+              href={`/visita/${visita.id}/informe`}
+              className="flex items-center justify-center gap-2 rounded-xl bg-accent text-accent-text py-3 text-sm font-medium"
+            >
+              <FileCheck size={16} /> Informe cliente
+            </Link>
+          )}
+        </section>
+
         {fotoUrls.length > 0 && (
           <section>
             <h2 className="text-sm font-medium text-text-dim mb-2">Fotos</h2>
@@ -92,7 +129,7 @@ export default async function VisitaDetallePage({
 
         {visita.notas_voz_transcripcion && (
           <section>
-            <h2 className="text-sm font-medium text-text-dim mb-2">Notas</h2>
+            <h2 className="text-sm font-medium text-text-dim mb-2">Notas / Descripción de la actividad</h2>
             <p className="bg-surface border border-border rounded-xl p-4 text-sm">
               {visita.notas_voz_transcripcion}
             </p>
@@ -112,6 +149,54 @@ export default async function VisitaDetallePage({
             </div>
           </section>
         )}
+
+        <section>
+          <h2 className="text-sm font-medium text-text-dim mb-2">
+            Detalles de la visita
+          </h2>
+          <div className="bg-surface border border-border rounded-xl divide-y divide-border text-sm">
+            {visita.referido_por && (
+              <div className="flex justify-between px-4 py-3">
+                <span className="text-text-dim">Referido por</span>
+                <span className="font-medium">{visita.referido_por}</span>
+              </div>
+            )}
+            {visita.equipos_utilizados && (
+              <div className="flex justify-between px-4 py-3">
+                <span className="text-text-dim">Equipos utilizados</span>
+                <span className="font-medium">{visita.equipos_utilizados}</span>
+              </div>
+            )}
+            {visita.costo_equipos > 0 && (
+              <div className="flex justify-between px-4 py-3">
+                <span className="text-text-dim">Costo equipos</span>
+                <span className="font-medium">
+                  ${Number(visita.costo_equipos).toLocaleString("es-CL")}
+                </span>
+              </div>
+            )}
+            {visita.km_recorridos > 0 && (
+              <div className="flex justify-between px-4 py-3">
+                <span className="text-text-dim">Km recorridos</span>
+                <span className="font-medium">{visita.km_recorridos}</span>
+              </div>
+            )}
+            {visita.total_estimado > 0 && (
+              <div className="flex justify-between px-4 py-3">
+                <span className="text-text-dim">Total estimado</span>
+                <span className="font-medium">
+                  ${Number(visita.total_estimado).toLocaleString("es-CL")}
+                </span>
+              </div>
+            )}
+            {visita.notas_cliente && (
+              <div className="px-4 py-3">
+                <span className="text-text-dim block mb-1">Notas del cliente</span>
+                <span className="font-medium">{visita.notas_cliente}</span>
+              </div>
+            )}
+          </div>
+        </section>
 
         {visita.prompt_diagrama_ia && (
           <section>

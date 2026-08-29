@@ -30,6 +30,16 @@ export default function NuevaVisitaPage() {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [medidas, setMedidas] = useState<Medida[]>([{ etiqueta: "", valor: "" }]);
   const [notas, setNotas] = useState("");
+  const [tipoTrabajo, setTipoTrabajo] = useState("");
+  const [etiquetasTexto, setEtiquetasTexto] = useState("");
+  const [estadoSeguimiento, setEstadoSeguimiento] = useState("En progreso");
+  const [referidoPor, setReferidoPor] = useState("");
+  const [equiposUtilizados, setEquiposUtilizados] = useState("");
+  const [costoEquipos, setCostoEquipos] = useState(0);
+  const [kmRecorridos, setKmRecorridos] = useState(0);
+  const [notasCliente, setNotasCliente] = useState("");
+  const [totalEstimado, setTotalEstimado] = useState(0);
+  const [requiereInforme, setRequiereInforme] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -150,6 +160,19 @@ export default function NuevaVisitaPage() {
           medidas: medidasObj,
           prompt_diagrama_ia: prompt,
           estado: "pendiente",
+          tipo_trabajo: tipoTrabajo || null,
+          etiquetas: etiquetasTexto
+            .split(",")
+            .map((e) => e.trim())
+            .filter(Boolean),
+          estado_seguimiento: estadoSeguimiento || null,
+          referido_por: referidoPor || null,
+          equipos_utilizados: equiposUtilizados || null,
+          costo_equipos: costoEquipos,
+          km_recorridos: kmRecorridos,
+          notas_cliente: notasCliente || null,
+          total_estimado: totalEstimado,
+          requiere_informe_cliente: requiereInforme,
         })
         .select("id")
         .single();
@@ -302,6 +325,92 @@ export default function NuevaVisitaPage() {
           >
             <Plus size={16} /> Agregar medida
           </button>
+        </section>
+
+        {/* Detalles de la visita (Bitácora) */}
+        <section>
+          <h2 className="text-sm font-medium text-text-dim mb-2">
+            Detalles de la visita
+          </h2>
+          <div className="space-y-3">
+            <input
+              value={tipoTrabajo}
+              onChange={(e) => setTipoTrabajo(e.target.value)}
+              placeholder="Tipo de trabajo (ej: Revisión/Diagnóstico, Cotización, Reparación)"
+              className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+            <input
+              value={etiquetasTexto}
+              onChange={(e) => setEtiquetasTexto(e.target.value)}
+              placeholder="Etiquetas separadas por coma (ej: Cliente nuevo, VIP)"
+              className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <select
+                value={estadoSeguimiento}
+                onChange={(e) => setEstadoSeguimiento(e.target.value)}
+                className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+              >
+                <option>En progreso</option>
+                <option>Requiere seguimiento</option>
+                <option>Completado</option>
+              </select>
+              <input
+                value={referidoPor}
+                onChange={(e) => setReferidoPor(e.target.value)}
+                placeholder="Referido por (opcional)"
+                className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                value={equiposUtilizados}
+                onChange={(e) => setEquiposUtilizados(e.target.value)}
+                placeholder="Equipos utilizados"
+                className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+              <input
+                type="number"
+                value={costoEquipos}
+                onChange={(e) => setCostoEquipos(Number(e.target.value))}
+                placeholder="Costo equipos"
+                className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="number"
+                step="0.1"
+                value={kmRecorridos}
+                onChange={(e) => setKmRecorridos(Number(e.target.value))}
+                placeholder="Km recorridos"
+                className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+              <input
+                type="number"
+                value={totalEstimado}
+                onChange={(e) => setTotalEstimado(Number(e.target.value))}
+                placeholder="Total estimado ($)"
+                className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+            </div>
+            <textarea
+              value={notasCliente}
+              onChange={(e) => setNotasCliente(e.target.value)}
+              placeholder="Notas personales del cliente (ej: prefiere WhatsApp, adulto mayor, etc.)"
+              rows={2}
+              className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+            />
+            <label className="flex items-center gap-2.5 bg-surface border border-border rounded-xl px-4 py-3 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={requiereInforme}
+                onChange={(e) => setRequiereInforme(e.target.checked)}
+                className="h-4 w-4 accent-accent"
+              />
+              Requiere informe formal para el cliente (inspección, mantención o diagnóstico complejo)
+            </label>
+          </div>
         </section>
 
         {error && (

@@ -12,6 +12,10 @@ const STATUS_STYLES: Record<string, string> = {
   // obras
   EN_CURSO: "bg-info/15 text-info",
   FINALIZADA: "bg-ok/15 text-ok",
+  // seguimiento de visitas (bitácora)
+  "En progreso": "bg-info/15 text-info",
+  "Requiere seguimiento": "bg-warn/15 text-warn",
+  Completado: "bg-ok/15 text-ok",
 };
 
 const STATUS_LABELS: Record<string, string> = {
