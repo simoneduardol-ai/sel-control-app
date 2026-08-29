@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import BrandMark from "@/components/BrandMark";
 
 export const metadata: Metadata = {
   title: "SEL Control",
@@ -19,6 +20,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className="antialiased">
+        <BrandMark />
         {children}
       </body>
     </html>

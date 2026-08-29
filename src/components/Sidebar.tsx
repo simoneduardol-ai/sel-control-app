@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import {
   LayoutDashboard,
   Users,
@@ -23,20 +22,9 @@ const NAV_ITEMS = [
 export default function Sidebar() {
   return (
     <aside className="hidden md:flex md:w-64 md:shrink-0 md:flex-col md:fixed md:inset-y-0 border-r border-sidebar-border bg-sidebar-bg text-sidebar-text">
-      <div className="px-5 py-6 flex items-center gap-3 border-b border-sidebar-border">
-        <div className="h-10 w-10 rounded-xl overflow-hidden shrink-0 bg-white/5">
-          <Image
-            src="/logo-dark.jpg"
-            alt="SEL"
-            width={40}
-            height={40}
-            className="h-full w-full object-cover"
-          />
-        </div>
-        <div>
-          <p className="font-display text-sm leading-tight">SEL Control</p>
-          <p className="text-sidebar-text-dim text-xs">Servicios Eléctricos López</p>
-        </div>
+      <div className="px-5 py-6 border-b border-sidebar-border">
+        <p className="font-display text-lg leading-tight">SEL Control</p>
+        <p className="text-sidebar-text-dim text-xs mt-0.5">Servicios Eléctricos López</p>
       </div>
 
       <Link
