@@ -5,6 +5,7 @@ import {
   FileText,
   HardHat,
   Package,
+  ClipboardList,
   Plus,
 } from "lucide-react";
 import LogoutButton from "@/components/LogoutButton";
@@ -14,6 +15,7 @@ const NAV_ITEMS = [
   { href: "/clientes", label: "Clientes", icon: Users },
   { href: "/cotizacion", label: "Cotizaciones", icon: FileText },
   { href: "/obra", label: "Obras", icon: HardHat },
+  { href: "/catalogo", label: "Catálogo de ítems", icon: ClipboardList },
   { href: "/materiales", label: "Materiales", icon: Package },
 ];
 
