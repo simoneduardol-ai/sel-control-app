@@ -40,6 +40,7 @@ export default function NuevaVisitaPage() {
   const [notasCliente, setNotasCliente] = useState("");
   const [totalEstimado, setTotalEstimado] = useState(0);
   const [requiereInforme, setRequiereInforme] = useState(false);
+  const [carpetaDriveUrl, setCarpetaDriveUrl] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -173,6 +174,7 @@ export default function NuevaVisitaPage() {
           notas_cliente: notasCliente || null,
           total_estimado: totalEstimado,
           requiere_informe_cliente: requiereInforme,
+          carpeta_fotos_drive_url: carpetaDriveUrl || null,
         })
         .select("id")
         .single();
@@ -238,6 +240,12 @@ export default function NuevaVisitaPage() {
               <span className="text-xs">Agregar</span>
             </button>
           </div>
+          <input
+            value={carpetaDriveUrl}
+            onChange={(e) => setCarpetaDriveUrl(e.target.value)}
+            placeholder="O pega aquí el link de una carpeta de Google Drive (opcional)"
+            className="w-full mt-2 rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+          />
         </section>
 
         {/* Nota de voz */}

@@ -118,6 +118,22 @@ export default async function VisitaDetallePage({
           </section>
         )}
 
+        {visita.carpeta_fotos_drive_url && (
+          <section>
+            <h2 className="text-sm font-medium text-text-dim mb-2">
+              Carpeta de fotos (Drive)
+            </h2>
+            <a
+              href={visita.carpeta_fotos_drive_url}
+              target="_blank"
+              rel="noreferrer"
+              className="block bg-surface border border-border rounded-xl p-4 text-sm text-accent font-medium truncate"
+            >
+              {visita.carpeta_fotos_drive_url}
+            </a>
+          </section>
+        )}
+
         {audioSignedUrl && (
           <section>
             <h2 className="text-sm font-medium text-text-dim mb-2">

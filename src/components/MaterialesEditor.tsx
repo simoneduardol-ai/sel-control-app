@@ -1,15 +1,23 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Trash2 } from "lucide-react";
 
 export type MaterialLinea = {
-  rowId: string; // id local, no de BD, para el key de React
-  materialId: string | null; // null hasta que se vincula o crea
+  rowId: string;
+  materialId: string | null;
   nombre: string;
   unidad: string;
   costoUnitario: number;
   cantidadPorUnidad: number;
+};
+
+type MaterialMaestro = {
+  id: string;
+  nombre: string;
+  unidad: string;
+  costo_referencial: number;
 };
 
 export default function MaterialesEditor({
@@ -20,6 +28,18 @@ export default function MaterialesEditor({
   onChange: (lineas: MaterialLinea[]) => void;
 }) {
   const supabase = createClient();
+  const [catalogo, setCatalogo] = useState<MaterialMaestro[]>([]);
+  const [filaAbierta, setFilaAbierta] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("materiales_maestros")
+        .select("id, nombre, unidad, costo_referencial")
+        .order("nombre");
+      setCatalogo(data ?? []);
+    })();
+  }, []);
 
   function actualizar(rowId: string, patch: Partial<MaterialLinea>) {
     onChange(lineas.map((l) => (l.rowId === rowId ? { ...l, ...patch } : l)));
@@ -30,10 +50,11 @@ export default function MaterialesEditor({
   }
 
   function agregarFila() {
+    const nuevoId = crypto.randomUUID();
     onChange([
       ...lineas,
       {
-        rowId: crypto.randomUUID(),
+        rowId: nuevoId,
         materialId: null,
         nombre: "",
         unidad: "",
@@ -41,33 +62,28 @@ export default function MaterialesEditor({
         cantidadPorUnidad: 1,
       },
     ]);
+    setFilaAbierta(nuevoId);
   }
 
-  async function buscarMaterial(rowId: string, texto: string) {
+  function elegirMaterial(rowId: string, m: MaterialMaestro) {
+    actualizar(rowId, {
+      materialId: m.id,
+      nombre: m.nombre,
+      unidad: m.unidad,
+      costoUnitario: Number(m.costo_referencial),
+    });
+    setFilaAbierta(null);
+  }
+
+  function escribirNombre(rowId: string, texto: string) {
     actualizar(rowId, { nombre: texto, materialId: null });
-    if (texto.trim().length < 2) return;
-
-    const { data } = await supabase
-      .from("materiales_maestros")
-      .select("id, nombre, unidad, costo_referencial")
-      .ilike("nombre", texto.trim())
-      .limit(1);
-
-    if (data && data.length > 0) {
-      const m = data[0];
-      actualizar(rowId, {
-        materialId: m.id,
-        nombre: m.nombre,
-        unidad: m.unidad,
-        costoUnitario: Number(m.costo_referencial),
-      });
-    }
+    setFilaAbierta(rowId);
   }
 
   return (
     <div>
-      <div className="border border-border rounded-xl overflow-hidden bg-surface">
-        <table className="w-full text-sm">
+      <div className="border border-border rounded-xl overflow-visible bg-surface">
+        <table className="w-full text-base">
           <thead>
             <tr className="border-b border-border text-text-dim text-xs uppercase tracking-wide">
               <th className="text-left font-medium px-3 py-2.5">Material</th>
@@ -82,70 +98,103 @@ export default function MaterialesEditor({
             </tr>
           </thead>
           <tbody>
-            {lineas.map((linea) => (
-              <tr key={linea.rowId} className="border-b border-border last:border-0">
-                <td className="px-3 py-2">
-                  <input
-                    value={linea.nombre}
-                    onChange={(e) => buscarMaterial(linea.rowId, e.target.value)}
-                    placeholder="Escribe el nombre..."
-                    className="w-full bg-transparent text-sm focus:outline-none"
-                  />
-                  {!linea.materialId && linea.nombre.trim().length >= 2 && (
-                    <span className="text-accent text-[11px]">
-                      Nuevo material — se creará al guardar
-                    </span>
-                  )}
-                </td>
-                <td className="px-3 py-2">
-                  <input
-                    value={linea.unidad}
-                    onChange={(e) =>
-                      actualizar(linea.rowId, { unidad: e.target.value })
-                    }
-                    placeholder="un"
-                    className="w-full bg-transparent text-sm focus:outline-none"
-                  />
-                </td>
-                <td className="px-3 py-2">
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={linea.cantidadPorUnidad}
-                    onChange={(e) =>
-                      actualizar(linea.rowId, {
-                        cantidadPorUnidad: Number(e.target.value),
-                      })
-                    }
-                    className="w-full bg-transparent text-sm focus:outline-none"
-                  />
-                </td>
-                <td className="px-3 py-2">
-                  <input
-                    type="number"
-                    value={linea.costoUnitario}
-                    disabled={!!linea.materialId}
-                    onChange={(e) =>
-                      actualizar(linea.rowId, {
-                        costoUnitario: Number(e.target.value),
-                      })
-                    }
-                    className="w-full bg-transparent text-sm focus:outline-none disabled:text-text-dim"
-                  />
-                </td>
-                <td className="px-2 py-2">
-                  <button
-                    onClick={() => quitar(linea.rowId)}
-                    className="text-text-dim"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {lineas.map((linea) => {
+              const query = linea.nombre.trim().toLowerCase();
+              const sugerencias =
+                filaAbierta === linea.rowId
+                  ? (query
+                      ? catalogo.filter((m) =>
+                          m.nombre.toLowerCase().includes(query)
+                        )
+                      : catalogo
+                    ).slice(0, 30)
+                  : [];
+
+              return (
+                <tr key={linea.rowId} className="border-b border-border last:border-0 relative">
+                  <td className="px-3 py-2.5 relative">
+                    <input
+                      value={linea.nombre}
+                      onFocus={() => setFilaAbierta(linea.rowId)}
+                      onChange={(e) => escribirNombre(linea.rowId, e.target.value)}
+                      onBlur={() => setTimeout(() => setFilaAbierta(null), 150)}
+                      placeholder="Buscar o escribir material..."
+                      className="w-full bg-transparent text-base focus:outline-none"
+                    />
+                    {!linea.materialId && linea.nombre.trim().length >= 2 && (
+                      <span className="text-accent text-xs block">
+                        Nuevo material — se creará al guardar
+                      </span>
+                    )}
+
+                    {filaAbierta === linea.rowId && sugerencias.length > 0 && (
+                      <div className="absolute left-0 right-0 top-full mt-1 z-20 bg-surface border border-border rounded-xl shadow-lg max-h-64 overflow-y-auto">
+                        {sugerencias.map((m) => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onMouseDown={() => elegirMaterial(linea.rowId, m)}
+                            className="w-full text-left px-3 py-2.5 text-base hover:bg-surface-raised flex items-center justify-between gap-3"
+                          >
+                            <span>{m.nombre}</span>
+                            <span className="text-text-dim text-sm shrink-0">
+                              {m.unidad} · ${Number(m.costo_referencial).toLocaleString("es-CL")}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <input
+                      value={linea.unidad}
+                      onChange={(e) =>
+                        actualizar(linea.rowId, { unidad: e.target.value })
+                      }
+                      placeholder="un"
+                      className="w-full bg-transparent text-base focus:outline-none"
+                    />
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={linea.cantidadPorUnidad}
+                      onChange={(e) =>
+                        actualizar(linea.rowId, {
+                          cantidadPorUnidad: Number(e.target.value),
+                        })
+                      }
+                      className="w-full bg-transparent text-base focus:outline-none"
+                    />
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <input
+                      type="number"
+                      value={linea.costoUnitario}
+                      disabled={!!linea.materialId}
+                      onChange={(e) =>
+                        actualizar(linea.rowId, {
+                          costoUnitario: Number(e.target.value),
+                        })
+                      }
+                      className="w-full bg-transparent text-base focus:outline-none disabled:text-text-dim"
+                    />
+                  </td>
+                  <td className="px-2 py-2.5">
+                    <button
+                      onClick={() => quitar(linea.rowId)}
+                      className="text-text-dim"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
             {lineas.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-3 py-6 text-center text-text-dim text-sm">
+                <td colSpan={5} className="px-3 py-6 text-center text-text-dim text-base">
                   Aún no has agregado materiales a este ítem.
                 </td>
               </tr>
@@ -155,15 +204,16 @@ export default function MaterialesEditor({
       </div>
       <button
         onClick={agregarFila}
-        className="mt-2 text-accent text-sm font-medium"
+        className="mt-2 text-accent text-base font-medium"
       >
         + Agregar material
       </button>
-      <p className="text-text-dim text-xs mt-2">
-        El nombre se busca en Materiales maestros: si coincide, la unidad y el precio
-        se completan solos y quedan vinculados (editar el precio en Materiales
-        maestros lo actualiza aquí también). Si el nombre es nuevo, se crea un
-        material maestro con lo que escribas.
+      <p className="text-text-dim text-sm mt-2">
+        Haz clic en el campo para ver la lista completa de materiales en orden
+        alfabético, o escribe para filtrar. Si eliges uno existente queda
+        vinculado en vivo (editar el precio en Materiales maestros lo actualiza
+        aquí también). Si escribes un nombre nuevo, se crea un material maestro
+        con lo que ingreses.
       </p>
     </div>
   );

@@ -72,6 +72,9 @@ export default async function RespaldoInternoPage({
         {visita.equipos_utilizados && (
           <Fila label="Equipos utilizados" value={visita.equipos_utilizados} />
         )}
+        {visita.carpeta_fotos_drive_url && (
+          <Fila label="Carpeta de fotos (Drive)" value={visita.carpeta_fotos_drive_url} />
+        )}
         {visita.costo_equipos > 0 && (
           <Fila
             label="Costo equipos"
