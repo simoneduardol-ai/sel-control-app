@@ -134,6 +134,22 @@ export default async function VisitaDetallePage({
           </section>
         )}
 
+        {visita.pdf_drive_url && (
+          <section>
+            <h2 className="text-sm font-medium text-text-dim mb-2">
+              Respaldo archivado en Drive
+            </h2>
+            <a
+              href={visita.pdf_drive_url}
+              target="_blank"
+              rel="noreferrer"
+              className="block bg-ok/10 border border-ok/20 rounded-xl p-4 text-sm text-ok font-medium truncate"
+            >
+              Ver PDF en Drive ↗
+            </a>
+          </section>
+        )}
+
         {audioSignedUrl && (
           <section>
             <h2 className="text-sm font-medium text-text-dim mb-2">

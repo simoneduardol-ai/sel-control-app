@@ -6,6 +6,7 @@ import {
   HardHat,
   Package,
   ClipboardList,
+  Settings,
   Plus,
 } from "lucide-react";
 import LogoutButton from "@/components/LogoutButton";
@@ -17,6 +18,7 @@ const NAV_ITEMS = [
   { href: "/obra", label: "Obras", icon: HardHat },
   { href: "/catalogo", label: "Catálogo de ítems", icon: ClipboardList },
   { href: "/materiales", label: "Materiales", icon: Package },
+  { href: "/ajustes", label: "Ajustes", icon: Settings },
 ];
 
 export default function Sidebar() {

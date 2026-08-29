@@ -181,6 +181,12 @@ export default function NuevaVisitaPage() {
 
       if (insertErr) throw insertErr;
 
+      // Archivar en Drive automáticamente (si está conectado). No bloquea
+      // el guardado si falla o si Drive todavía no está conectado.
+      fetch(`/api/visitas/${visita.id}/archivar`, { method: "POST" }).catch(
+        () => {}
+      );
+
       router.push(`/visita/${visita.id}`);
       router.refresh();
     } catch {
