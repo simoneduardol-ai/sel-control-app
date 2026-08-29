@@ -3,25 +3,34 @@
 @tailwind utilities;
 
 :root {
-  --bg: #14171a;
-  --surface: #1e2227;
-  --surface-raised: #262b31;
-  --border: #343a41;
-  --text: #f2f3f5;
-  --text-dim: #9aa3ad;
-  --accent: #f2b705;
-  --accent-text: #14171a;
-  --ok: #3ecf8e;
-  --warn: #f2b705;
-  --danger: #e5484d;
-  --info: #4d9de5;
+  /* Tema claro — basado en la marca real de SEL */
+  --bg: #f7f7f8;
+  --surface: #ffffff;
+  --surface-raised: #f0f1f3;
+  --border: #e3e4e8;
+  --text: #1c1e22;
+  --text-dim: #6b7078;
+
+  /* Dorado del logo (la "O" con el rayo) */
+  --accent: #f0b400;
+  --accent-text: #1c1e22;
+
+  --ok: #1a9e6b;
+  --warn: #f0b400;
+  --danger: #d93b3b;
+  --info: #3d7fd9;
+
+  /* Azul marino del logo oscuro — solo para la barra lateral */
+  --sidebar-bg: #0b1330;
+  --sidebar-text: #f7f7f8;
+  --sidebar-text-dim: #9aa1b5;
+  --sidebar-border: #1c2447;
+  --sidebar-hover: #141c40;
 }
 
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
 

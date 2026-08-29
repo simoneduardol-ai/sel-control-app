@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 
 export default function AuthPage() {
@@ -33,8 +34,14 @@ export default function AuthPage() {
     <main className="min-h-dvh flex flex-col items-center justify-center px-6 bg-bg">
       <div className="w-full max-w-sm">
         <div className="mb-10 text-center">
-          <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-accent-text font-display text-2xl mb-4">
-            SEL
+          <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl overflow-hidden mb-4">
+            <Image
+              src="/logo-dark.jpg"
+              alt="SEL"
+              width={64}
+              height={64}
+              className="h-full w-full object-cover"
+            />
           </div>
           <h1 className="font-display text-2xl">SEL Control</h1>
           <p className="text-text-dim text-sm mt-1">
