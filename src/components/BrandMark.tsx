@@ -10,7 +10,7 @@ export default function BrandMark() {
   return (
     <div className="hidden md:block fixed top-4 right-4 z-40 h-11 w-11 rounded-full overflow-hidden shadow-md ring-1 ring-border">
       <Image
-        src="/logo-light.png"
+        src="/logo-dark.jpg"
         alt="SEL"
         width={44}
         height={44}
