@@ -8,7 +8,7 @@ export default function BrandMark() {
   if (pathname?.startsWith("/auth")) return null;
 
   return (
-    <div className="hidden md:block fixed top-4 right-4 z-40 h-11 w-11 rounded-full overflow-hidden shadow-md ring-1 ring-border">
+    <div className="hidden md:block fixed top-4 right-4 z-40 h-11 w-11 rounded-full overflow-hidden shadow-md ring-1 ring-border pointer-events-none">
       <Image
         src="/logo-dark.jpg"
         alt="SEL"
