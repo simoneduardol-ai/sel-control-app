@@ -55,7 +55,14 @@ export default async function CotizacionDetallePage({
         <Link href="/" className="p-1 -ml-1 text-text-dim md:hidden">
           <ArrowLeft size={22} />
         </Link>
-        <h1 className="font-display text-lg flex-1">{cliente?.nombre}</h1>
+        <h1 className="font-display text-lg flex-1">
+          {cliente?.nombre}
+          {cotizacion.numero_cotizacion && (
+            <span className="text-text-dim text-sm font-sans font-normal ml-2">
+              {cotizacion.numero_cotizacion}
+            </span>
+          )}
+        </h1>
         <Link
           href={`/cotizacion/${cotizacion.id}/editar`}
           className="flex items-center gap-1.5 text-accent text-sm font-medium"

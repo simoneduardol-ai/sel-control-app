@@ -32,6 +32,24 @@ export async function POST(
     direccion: string | null;
   } | null;
 
+  // Asignar número correlativo la primera vez que se emite (COT-2026-001)
+  let numeroCotizacion = cotizacion.numero_cotizacion as string | null;
+  if (!numeroCotizacion) {
+    const anio = new Date().getFullYear();
+    const { count } = await supabase
+      .from("cotizaciones")
+      .select("id", { count: "exact", head: true })
+      .like("numero_cotizacion", `COT-${anio}-%`);
+
+    const siguiente = (count ?? 0) + 1;
+    numeroCotizacion = `COT-${anio}-${String(siguiente).padStart(3, "0")}`;
+
+    await supabase
+      .from("cotizaciones")
+      .update({ numero_cotizacion: numeroCotizacion })
+      .eq("id", id);
+  }
+
   const { data: etapas } = await supabase
     .from("cotizacion_etapas")
     .select("nombre_etapa, orden, cotizacion_items_apu(descripcion_item, cantidad, unidad, costo_material_unitario, costo_mano_obra_unitario)")
@@ -58,6 +76,7 @@ export async function POST(
   }));
 
   const pdfBuffer = await generarPdfCotizacion({
+    numeroCotizacion,
     cliente: cliente?.nombre ?? "Cliente sin nombre",
     direccion: cliente?.direccion,
     etapas: etapasPdf,
@@ -67,6 +86,7 @@ export async function POST(
     mostrarPrecioPorItem: cotizacion.mostrar_precio_por_item,
     mostrarTotalMateriales: cotizacion.mostrar_total_materiales,
     fecha: new Date().toLocaleDateString("es-CL", { dateStyle: "long" }),
+    logoUrl: `${process.env.APP_URL}/logo-dark.jpg`,
   });
 
   let driveUrl: string | null = null;
@@ -83,7 +103,7 @@ export async function POST(
         refreshToken: integracion.refresh_token,
         carpetaRaiz: "Cotizaciones (SEL)",
         nombreCliente: cliente?.nombre ?? "Sin nombre",
-        nombreArchivo: `Cotizacion - ${new Date().toISOString().slice(0, 10)}.pdf`,
+        nombreArchivo: `${numeroCotizacion}.pdf`,
         pdfBuffer,
       });
       driveUrl = url;
