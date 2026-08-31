@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ObraAccionesEstado from "@/components/ObraAccionesEstado";
 import HistorialEstados from "@/components/HistorialEstados";
+import PagosObraSection from "@/components/PagosObraSection";
 import { StatusBadge } from "@/components/StatusBadge";
 
 export const dynamic = "force-dynamic";
@@ -110,6 +111,12 @@ export default async function ObraDetallePage({
           cotizacionId={obra.cotizacion_id}
           numeroCotizacion={cotizacion?.numero_cotizacion ?? null}
           estadoActual={obra.estado}
+        />
+
+        <PagosObraSection
+          obraId={obra.id}
+          montoCotizado={Number(obra.monto_cotizado) || 0}
+          obraFinalizada={obra.estado === "FINALIZADA"}
         />
 
         <section>
