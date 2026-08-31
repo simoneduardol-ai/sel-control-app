@@ -202,7 +202,7 @@ export default function CatalogoItemSelector({
 
             {linea.catalogoItemId && linea.expandido && (
               <div className="mt-4 space-y-4">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-text-dim uppercase tracking-wide mb-1.5">
                       Cantidad
@@ -217,7 +217,7 @@ export default function CatalogoItemSelector({
                       className="w-full rounded-lg bg-bg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                     />
                   </div>
-                  <div>
+                  <div className="col-span-2">
                     <label className="block text-xs font-medium text-text-dim uppercase tracking-wide mb-1.5">
                       Mano de obra (por unidad)
                     </label>

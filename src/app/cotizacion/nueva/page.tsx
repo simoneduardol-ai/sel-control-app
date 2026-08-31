@@ -195,8 +195,8 @@ export default function NuevaCotizacionPage() {
           <h1 className="font-display text-lg">Nueva cotización</h1>
         </header>
 
-        <div className="px-5 md:px-8 py-6 max-w-3xl grid md:grid-cols-2 gap-6">
-          <div className="space-y-6">
+        <div className="px-5 md:px-8 py-6 max-w-6xl md:flex md:gap-8 md:items-start">
+          <div className="flex-1 min-w-0 space-y-6">
             <section>
               <h2 className="text-sm font-medium text-text-dim mb-2">Cliente</h2>
               <ClienteSelector value={cliente} onChange={setCliente} />
@@ -245,8 +245,8 @@ export default function NuevaCotizacionPage() {
             )}
           </div>
 
-          <div className="space-y-6">
-            <section className="border border-border rounded-xl bg-surface p-4 sticky top-20">
+          <div className="md:w-80 md:shrink-0 md:sticky md:top-20 space-y-6 mt-6 md:mt-0">
+            <section className="border border-border rounded-xl bg-surface p-4">
               <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-3">
                 Resumen (interno)
               </h2>
