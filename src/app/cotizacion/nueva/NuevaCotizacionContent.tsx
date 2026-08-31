@@ -90,7 +90,7 @@ export default function NuevaCotizacionContent() {
       return;
     }
     const etapasConItems = etapas.filter(
-      (e) => e.nombre.trim() && e.items.some((i) => i.nombre.trim())
+      (e) => e.items.some((i) => i.nombre.trim())
     );
     if (etapasConItems.length === 0) {
       setError("Agrega al menos una etapa con un ítem.");
@@ -123,7 +123,7 @@ export default function NuevaCotizacionContent() {
           .from("cotizacion_etapas")
           .insert({
             cotizacion_id: cotizacion.id,
-            nombre_etapa: etapa.nombre.trim(),
+            nombre_etapa: etapa.nombre.trim() || "General",
             orden: idx,
           })
           .select("id")
@@ -151,7 +151,7 @@ export default function NuevaCotizacionContent() {
               .insert({
                 nombre_item: item.nombre.trim(),
                 unidad: item.unidad || "unidad",
-                categoria: etapa.nombre.trim(),
+                categoria: etapa.nombre.trim() || "Otro",
                 costo_mano_obra_referencial: item.costoManoObraUnitario,
               })
               .select("id")
@@ -313,7 +313,7 @@ export default function NuevaCotizacionContent() {
                         onChange={(e) =>
                           actualizarEtapa(etapa.rowId, { nombre: e.target.value })
                         }
-                        placeholder="Nombre de la etapa (ej: Empalme, Tablero)"
+                        placeholder="Nombre de la etapa (opcional — solo si divides la obra en fases)"
                         className="flex-1 rounded-lg bg-bg border border-border px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-accent"
                       />
                       {etapas.length > 1 && (
