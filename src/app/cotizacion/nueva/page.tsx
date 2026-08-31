@@ -17,6 +17,19 @@ type Etapa = {
   items: ItemCotizacionLinea[];
 };
 
+function totalesLinea(item: ItemCotizacionLinea) {
+  const materiales = item.materiales.reduce(
+    (s, m) => s + m.costoUnitario * m.cantidadPorUnidad,
+    0
+  );
+  const equipos = item.equipos.reduce((s, e) => s + e.costoUnitario * e.cantidadPorUnidad, 0);
+  return {
+    manoObra: item.cantidad * item.costoManoObraUnitario,
+    materiales: item.cantidad * materiales,
+    equipos: item.cantidad * equipos,
+  };
+}
+
 export default function NuevaCotizacionPage() {
   const router = useRouter();
   const supabase = createClient();
@@ -42,21 +55,17 @@ export default function NuevaCotizacionPage() {
     setEtapas((prev) => prev.filter((e) => e.rowId !== rowId));
   }
 
-  const totalManoObra = etapas.reduce(
-    (sum, e) =>
-      sum + e.items.reduce((s, i) => s + i.cantidad * i.costoManoObraUnitario, 0),
-    0
-  );
-  const totalMateriales = etapas.reduce(
-    (sum, e) =>
-      sum + e.items.reduce((s, i) => s + i.cantidad * i.costoMaterialUnitario, 0),
-    0
-  );
-  const totalEquipos = etapas.reduce(
-    (sum, e) =>
-      sum + e.items.reduce((s, i) => s + i.cantidad * i.costoEquipoUnitario, 0),
-    0
-  );
+  let totalManoObra = 0;
+  let totalMateriales = 0;
+  let totalEquipos = 0;
+  for (const etapa of etapas) {
+    for (const item of etapa.items) {
+      const t = totalesLinea(item);
+      totalManoObra += t.manoObra;
+      totalMateriales += t.materiales;
+      totalEquipos += t.equipos;
+    }
+  }
   const totalGeneral = totalManoObra + totalMateriales + totalEquipos;
 
   async function guardar() {
@@ -64,7 +73,9 @@ export default function NuevaCotizacionPage() {
       setError("Selecciona un cliente primero.");
       return;
     }
-    const etapasConItems = etapas.filter((e) => e.nombre.trim() && e.items.length > 0);
+    const etapasConItems = etapas.filter(
+      (e) => e.nombre.trim() && e.items.some((i) => i.catalogoItemId)
+    );
     if (etapasConItems.length === 0) {
       setError("Agrega al menos una etapa con un ítem.");
       return;
@@ -105,6 +116,11 @@ export default function NuevaCotizacionPage() {
         for (const item of etapa.items) {
           if (!item.catalogoItemId) continue;
 
+          const totalMaterialUnitario = item.materiales.reduce(
+            (s, m) => s + m.costoUnitario * m.cantidadPorUnidad,
+            0
+          );
+
           const { data: itemRow, error: errItem } = await supabase
             .from("cotizacion_items_apu")
             .insert({
@@ -113,42 +129,48 @@ export default function NuevaCotizacionPage() {
               descripcion_item: item.nombre,
               cantidad: item.cantidad,
               unidad: item.unidad,
-              costo_material_unitario: item.costoMaterialUnitario,
+              costo_material_unitario: totalMaterialUnitario,
               costo_mano_obra_unitario: item.costoManoObraUnitario,
             })
             .select("id")
             .single();
           if (errItem) throw errItem;
 
-          // Copiar (snapshot) los materiales del ítem del catálogo, escalados por cantidad
-          const { data: vinculos } = await supabase
-            .from("catalogo_item_materiales")
-            .select("material_id, cantidad_por_unidad, materiales_maestros(costo_referencial)")
-            .eq("catalogo_item_id", item.catalogoItemId);
+          // Guardar materiales editados de esta línea (creando nuevos si hace falta)
+          for (const linea of item.materiales) {
+            if (!linea.nombre.trim()) continue;
+            let materialId = linea.materialId;
 
-          for (const v of vinculos ?? []) {
-            const m = v.materiales_maestros as unknown as { costo_referencial: number } | null;
+            if (!materialId) {
+              const { data: nuevoMaterial, error: errMat } = await supabase
+                .from("materiales_maestros")
+                .insert({
+                  nombre: linea.nombre.trim(),
+                  unidad: linea.unidad || "un",
+                  costo_referencial: linea.costoUnitario,
+                })
+                .select("id")
+                .single();
+              if (errMat) throw errMat;
+              materialId = nuevoMaterial.id;
+            }
+
             await supabase.from("cotizacion_item_materiales").insert({
               cotizacion_item_id: itemRow.id,
-              material_id: v.material_id,
-              cantidad_total: Number(v.cantidad_por_unidad) * item.cantidad,
-              costo_unitario: Number(m?.costo_referencial ?? 0),
+              material_id: materialId,
+              cantidad_total: linea.cantidadPorUnidad * item.cantidad,
+              costo_unitario: linea.costoUnitario,
             });
           }
 
-          // Copiar (snapshot) los equipos del ítem del catálogo, escalados por cantidad
-          const { data: vinculosEquipos } = await supabase
-            .from("catalogo_item_equipos")
-            .select("equipo_id, cantidad_por_unidad, equipos_maestros(precio_unitario)")
-            .eq("catalogo_item_id", item.catalogoItemId);
-
-          for (const v of vinculosEquipos ?? []) {
-            const eq = v.equipos_maestros as unknown as { precio_unitario: number } | null;
+          // Guardar equipos editados de esta línea (solo existentes)
+          for (const linea of item.equipos) {
+            if (!linea.equipoId) continue;
             await supabase.from("cotizacion_item_equipos").insert({
               cotizacion_item_id: itemRow.id,
-              equipo_id: v.equipo_id,
-              cantidad_total: Number(v.cantidad_por_unidad) * item.cantidad,
-              costo_unitario: Number(eq?.precio_unitario ?? 0),
+              equipo_id: linea.equipoId,
+              cantidad_total: linea.cantidadPorUnidad * item.cantidad,
+              costo_unitario: linea.costoUnitario,
             });
           }
         }
@@ -184,10 +206,7 @@ export default function NuevaCotizacionPage() {
               <h2 className="text-sm font-medium text-text-dim mb-2">Etapas</h2>
               <div className="space-y-4">
                 {etapas.map((etapa) => (
-                  <div
-                    key={etapa.rowId}
-                    className="border border-border rounded-xl p-4 bg-surface"
-                  >
+                  <div key={etapa.rowId} className="border border-border rounded-xl p-4 bg-surface">
                     <div className="flex items-center gap-2 mb-3">
                       <input
                         value={etapa.nombre}
@@ -222,14 +241,12 @@ export default function NuevaCotizacionPage() {
             </section>
 
             {error && (
-              <p className="text-danger text-sm bg-danger/10 rounded-lg px-3 py-2">
-                {error}
-              </p>
+              <p className="text-danger text-sm bg-danger/10 rounded-lg px-3 py-2">{error}</p>
             )}
           </div>
 
           <div className="space-y-6">
-            <section className="border border-border rounded-xl bg-surface p-4">
+            <section className="border border-border rounded-xl bg-surface p-4 sticky top-20">
               <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-3">
                 Resumen (interno)
               </h2>
@@ -237,7 +254,7 @@ export default function NuevaCotizacionPage() {
                 <span className="text-text-dim">Mano de obra</span>
                 <span>${totalManoObra.toLocaleString("es-CL")}</span>
               </div>
-              <div className="flex justify-between text-sm py-1.5 border-b border-border pb-3 mb-3">
+              <div className="flex justify-between text-sm py-1.5">
                 <span className="text-text-dim">Materiales e insumos</span>
                 <span>${totalMateriales.toLocaleString("es-CL")}</span>
               </div>
@@ -247,7 +264,7 @@ export default function NuevaCotizacionPage() {
                   <span>${totalEquipos.toLocaleString("es-CL")}</span>
                 </div>
               )}
-              <div className="flex justify-between font-display text-lg">
+              <div className="flex justify-between font-display text-lg border-t border-border pt-3 mt-1">
                 <span>Total</span>
                 <span>${totalGeneral.toLocaleString("es-CL")}</span>
               </div>
@@ -264,9 +281,9 @@ export default function NuevaCotizacionPage() {
                   onChange={(e) => setMostrarPrecioPorItem(e.target.checked)}
                   className="h-4 w-4 mt-0.5 accent-accent"
                 />
-                Mostrar precio unitario y total por ítem en el PDF (por defecto el
-                cliente solo ve la descripción de cada ítem y el total general —
-                nunca precios por ítem ni desglose de materiales)
+                Mostrar precio unitario y total por ítem en el PDF (por defecto el cliente
+                solo ve la descripción de cada ítem y el total general — nunca precios por
+                ítem ni desglose de materiales)
               </label>
               <label className="flex items-start gap-2.5 text-sm cursor-pointer">
                 <input
