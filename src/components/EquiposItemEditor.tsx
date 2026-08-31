@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Trash2 } from "lucide-react";
-import Link from "next/link";
 
 export type EquipoLinea = {
   rowId: string;
@@ -77,75 +76,121 @@ export default function EquiposItemEditor({
     setFilaAbierta(null);
   }
 
+  function escribirNombre(rowId: string, texto: string) {
+    actualizar(rowId, { nombre: texto, equipoId: null });
+    setFilaAbierta(rowId);
+  }
+
   return (
     <div>
-      <div className="space-y-2">
-        {lineas.map((linea) => {
-          const query = linea.nombre.trim().toLowerCase();
-          const sugerencias =
-            filaAbierta === linea.rowId
-              ? (query
-                  ? catalogo.filter((c) => c.nombre.toLowerCase().includes(query))
-                  : catalogo
-                ).slice(0, 30)
-              : [];
+      <div className="border border-border rounded-xl overflow-visible bg-surface">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border text-text-dim text-xs uppercase tracking-wide">
+              <th className="text-left font-medium px-3 py-2.5">Equipo</th>
+              <th className="text-left font-medium px-3 py-2.5 w-20">Unidad</th>
+              <th className="text-left font-medium px-3 py-2.5 w-24">Cant.</th>
+              <th className="text-left font-medium px-3 py-2.5 w-28">Costo unitario</th>
+              <th className="w-10"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {lineas.map((linea) => {
+              const query = linea.nombre.trim().toLowerCase();
+              const sugerencias =
+                filaAbierta === linea.rowId
+                  ? (query
+                      ? catalogo.filter((eq) => eq.nombre.toLowerCase().includes(query))
+                      : catalogo
+                    ).slice(0, 30)
+                  : [];
 
-          return (
-            <div key={linea.rowId} className="flex items-start gap-2 relative">
-              <div className="flex-1 relative">
-                <input
-                  value={linea.nombre}
-                  onFocus={() => setFilaAbierta(linea.rowId)}
-                  onChange={(e) => {
-                    actualizar(linea.rowId, { nombre: e.target.value, equipoId: null });
-                    setFilaAbierta(linea.rowId);
-                  }}
-                  onBlur={() => setTimeout(() => setFilaAbierta(null), 150)}
-                  placeholder="Buscar equipo..."
-                  className="w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                />
-                {filaAbierta === linea.rowId && sugerencias.length > 0 && (
-                  <div className="absolute left-0 right-0 top-full mt-1 z-20 bg-surface border border-border rounded-xl shadow-lg max-h-56 overflow-y-auto">
-                    {sugerencias.map((eq) => (
-                      <button
-                        key={eq.id}
-                        type="button"
-                        onMouseDown={() => elegirEquipo(linea.rowId, eq)}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-surface-raised"
-                      >
-                        {eq.nombre} {eq.marca ? `(${eq.marca})` : ""}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              {linea.equipoId && (
-                <input
-                  type="number"
-                  step="0.01"
-                  value={linea.cantidadPorUnidad}
-                  onChange={(e) =>
-                    actualizar(linea.rowId, { cantidadPorUnidad: Number(e.target.value) })
-                  }
-                  className="w-16 bg-surface border border-border rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                />
-              )}
-              <button onClick={() => quitar(linea.rowId)} className="text-text-dim p-2">
-                <Trash2 size={16} />
-              </button>
-            </div>
-          );
-        })}
+              return (
+                <tr key={linea.rowId} className="border-b border-border last:border-0 relative">
+                  <td className="px-3 py-2.5 relative">
+                    <input
+                      value={linea.nombre}
+                      onFocus={() => setFilaAbierta(linea.rowId)}
+                      onChange={(e) => escribirNombre(linea.rowId, e.target.value)}
+                      onBlur={() => setTimeout(() => setFilaAbierta(null), 150)}
+                      placeholder="Buscar o escribir equipo..."
+                      className="w-full bg-transparent text-sm focus:outline-none"
+                    />
+                    {!linea.equipoId && linea.nombre.trim().length >= 2 && (
+                      <span className="text-accent text-xs block">
+                        Nuevo equipo — se creará al guardar
+                      </span>
+                    )}
+                    {filaAbierta === linea.rowId && sugerencias.length > 0 && (
+                      <div className="absolute left-0 right-0 top-full mt-1 z-20 bg-surface border border-border rounded-xl shadow-lg max-h-56 overflow-y-auto">
+                        {sugerencias.map((eq) => (
+                          <button
+                            key={eq.id}
+                            type="button"
+                            onMouseDown={() => elegirEquipo(linea.rowId, eq)}
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-surface-raised"
+                          >
+                            {eq.nombre} {eq.marca ? `(${eq.marca})` : ""}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <input
+                      value={linea.unidad}
+                      onChange={(e) => actualizar(linea.rowId, { unidad: e.target.value })}
+                      placeholder="un"
+                      className="w-full bg-transparent text-sm focus:outline-none"
+                    />
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={linea.cantidadPorUnidad}
+                      onChange={(e) =>
+                        actualizar(linea.rowId, { cantidadPorUnidad: Number(e.target.value) })
+                      }
+                      className="w-full bg-transparent text-sm focus:outline-none"
+                    />
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <input
+                      type="number"
+                      value={linea.costoUnitario}
+                      disabled={!!linea.equipoId}
+                      onChange={(e) =>
+                        actualizar(linea.rowId, { costoUnitario: Number(e.target.value) })
+                      }
+                      className="w-full bg-transparent text-sm focus:outline-none disabled:text-text-dim"
+                    />
+                  </td>
+                  <td className="px-2 py-2.5">
+                    <button onClick={() => quitar(linea.rowId)} className="text-text-dim">
+                      <Trash2 size={16} />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+            {lineas.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-3 py-6 text-center text-text-dim text-sm">
+                  Aún no has agregado equipos a este ítem.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
       <button onClick={agregarFila} className="mt-2 text-accent text-sm font-medium">
         + Agregar equipo
       </button>
       <p className="text-text-dim text-xs mt-2">
-        Solo puedes elegir equipos ya cargados en{" "}
-        <Link href="/equipos" className="underline">
-          Equipos
-        </Link>
-        . Si necesitas uno nuevo, agrégalo ahí primero.
+        Escribe el nombre del equipo: si coincide con uno ya cargado en Equipos, se
+        vincula solo. Si es nuevo, se crea automático al guardar — llena unidad y
+        precio si quieres, no es obligatorio.
       </p>
     </div>
   );

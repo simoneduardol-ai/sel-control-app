@@ -195,14 +195,30 @@ export default function EditarItemCatalogoPage() {
         if (errVinculo) throw errVinculo;
       }
 
-      // Vincular equipos (solo los que tienen equipoId — ya deben existir en Equipos)
+      // Vincular equipos (creando nuevos si hace falta, igual que materiales)
       for (const linea of equipos) {
-        if (!linea.equipoId) continue;
+        if (!linea.nombre.trim()) continue;
+        let equipoId = linea.equipoId;
+
+        if (!equipoId) {
+          const { data: nuevoEquipo, error: errEq } = await supabase
+            .from("equipos_maestros")
+            .insert({
+              nombre: linea.nombre.trim(),
+              unidad: linea.unidad || "un",
+              precio_unitario: linea.costoUnitario,
+            })
+            .select("id")
+            .single();
+          if (errEq) throw errEq;
+          equipoId = nuevoEquipo.id;
+        }
+
         const { error: errEquipo } = await supabase
           .from("catalogo_item_equipos")
           .insert({
             catalogo_item_id: itemId,
-            equipo_id: linea.equipoId,
+            equipo_id: equipoId,
             cantidad_por_unidad: linea.cantidadPorUnidad,
           });
         if (errEquipo) throw errEquipo;

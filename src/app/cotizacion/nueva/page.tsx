@@ -163,12 +163,28 @@ export default function NuevaCotizacionPage() {
             });
           }
 
-          // Guardar equipos editados de esta línea (solo existentes)
+          // Guardar equipos editados de esta línea (creando nuevos si hace falta)
           for (const linea of item.equipos) {
-            if (!linea.equipoId) continue;
+            if (!linea.nombre.trim()) continue;
+            let equipoId = linea.equipoId;
+
+            if (!equipoId) {
+              const { data: nuevoEquipo, error: errEq } = await supabase
+                .from("equipos_maestros")
+                .insert({
+                  nombre: linea.nombre.trim(),
+                  unidad: linea.unidad || "un",
+                  precio_unitario: linea.costoUnitario,
+                })
+                .select("id")
+                .single();
+              if (errEq) throw errEq;
+              equipoId = nuevoEquipo.id;
+            }
+
             await supabase.from("cotizacion_item_equipos").insert({
               cotizacion_item_id: itemRow.id,
-              equipo_id: linea.equipoId,
+              equipo_id: equipoId,
               cantidad_total: linea.cantidadPorUnidad * item.cantidad,
               costo_unitario: linea.costoUnitario,
             });
