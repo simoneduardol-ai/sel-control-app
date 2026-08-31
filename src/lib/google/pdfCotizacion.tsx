@@ -135,6 +135,7 @@ type ItemPdf = {
   cantidad: number;
   unidad: string;
   total: number;
+  mostrarPrecioIndividual: boolean;
 };
 
 type EtapaPdf = {
@@ -210,7 +211,7 @@ export async function generarPdfCotizacion({
                   <Text style={styles.itemDescripcion}>
                     {item.descripcion} — {item.cantidad} {item.unidad}
                   </Text>
-                  {mostrarPrecioPorItem && (
+                  {(mostrarPrecioPorItem || item.mostrarPrecioIndividual) && (
                     <Text style={styles.itemPrecio}>{fmt(item.total)}</Text>
                   )}
                 </View>

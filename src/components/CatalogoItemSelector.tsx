@@ -25,6 +25,7 @@ export type ItemCotizacionLinea = {
   equipos: EquipoLinea[];
   expandido: boolean;
   agregarACatalogo: boolean;
+  mostrarPrecioIndividual: boolean;
 };
 
 export default function CatalogoItemSelector({
@@ -71,6 +72,7 @@ export default function CatalogoItemSelector({
         equipos: [],
         expandido: true,
         agregarACatalogo: false,
+        mostrarPrecioIndividual: false,
       },
     ]);
     setFilaAbierta(nuevoId);
@@ -310,6 +312,25 @@ export default function CatalogoItemSelector({
                     <span>${totalLinea.toLocaleString("es-CL")}</span>
                   </div>
                 </div>
+
+                <label className="flex items-start gap-2.5 text-xs cursor-pointer bg-surface-raised rounded-lg p-2.5">
+                  <input
+                    type="checkbox"
+                    checked={linea.mostrarPrecioIndividual}
+                    onChange={(e) =>
+                      actualizar(linea.rowId, {
+                        mostrarPrecioIndividual: e.target.checked,
+                      })
+                    }
+                    className="h-3.5 w-3.5 mt-0.5 accent-accent"
+                  />
+                  <span>
+                    Mostrar el precio de <strong>este ítem</strong> al cliente en el PDF,
+                    aunque el resto de la cotización esté oculta. Útil para venta directa de
+                    un equipo (ej. una cámara) donde el cliente necesita ver ese precio
+                    puntual.
+                  </span>
+                </label>
               </div>
             )}
           </div>

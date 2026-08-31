@@ -52,7 +52,7 @@ export async function POST(
 
   const { data: etapas } = await supabase
     .from("cotizacion_etapas")
-    .select("nombre_etapa, orden, cotizacion_items_apu(descripcion_item, cantidad, unidad, costo_material_unitario, costo_mano_obra_unitario)")
+    .select("nombre_etapa, orden, cotizacion_items_apu(descripcion_item, cantidad, unidad, costo_material_unitario, costo_mano_obra_unitario, costo_equipo_unitario, mostrar_precio_individual)")
     .eq("cotizacion_id", id)
     .order("orden");
 
@@ -65,12 +65,18 @@ export async function POST(
         unidad: string;
         costo_material_unitario: number;
         costo_mano_obra_unitario: number;
+        costo_equipo_unitario: number;
+        mostrar_precio_individual: boolean;
       }) => ({
         descripcion: i.descripcion_item,
         cantidad: i.cantidad,
         unidad: i.unidad,
-        precioUnitario: i.costo_material_unitario + i.costo_mano_obra_unitario,
-        total: i.cantidad * (i.costo_material_unitario + i.costo_mano_obra_unitario),
+        mostrarPrecioIndividual: i.mostrar_precio_individual,
+        precioUnitario:
+          i.costo_material_unitario + i.costo_mano_obra_unitario + i.costo_equipo_unitario,
+        total:
+          i.cantidad *
+          (i.costo_material_unitario + i.costo_mano_obra_unitario + i.costo_equipo_unitario),
       })
     ),
   }));

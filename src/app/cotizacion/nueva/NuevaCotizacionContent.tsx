@@ -99,7 +99,7 @@ export default function NuevaCotizacionContent({
         .select(
           `id, nombre_etapa, orden,
            cotizacion_items_apu (
-             id, catalogo_item_id, descripcion_item, cantidad, unidad, costo_mano_obra_unitario,
+             id, catalogo_item_id, descripcion_item, cantidad, unidad, costo_mano_obra_unitario, mostrar_precio_individual,
              cotizacion_item_materiales ( material_id, nombre_libre, unidad_libre, costo_unitario, cantidad_total, materiales_maestros(nombre, unidad) ),
              cotizacion_item_equipos ( equipo_id, nombre_libre, unidad_libre, costo_unitario, cantidad_total, equipos_maestros(nombre, unidad, marca) )
            )`
@@ -162,6 +162,7 @@ export default function NuevaCotizacionContent({
               equipos,
               expandido: false,
               agregarACatalogo: false,
+              mostrarPrecioIndividual: !!it.mostrar_precio_individual,
             };
           }),
         }));
@@ -277,6 +278,10 @@ export default function NuevaCotizacionContent({
             (s, m) => s + m.costoUnitario * m.cantidadPorUnidad,
             0
           );
+          const totalEquipoUnitario = item.equipos.reduce(
+            (s, e) => s + e.costoUnitario * e.cantidadPorUnidad,
+            0
+          );
 
           // Si el ítem es nuevo y se marcó "agregar a mi Catálogo", lo creamos
           // ahí primero — sus materiales/equipos quedan obligados a Maestros,
@@ -310,6 +315,8 @@ export default function NuevaCotizacionContent({
               unidad: item.unidad,
               costo_material_unitario: totalMaterialUnitario,
               costo_mano_obra_unitario: item.costoManoObraUnitario,
+              costo_equipo_unitario: totalEquipoUnitario,
+              mostrar_precio_individual: item.mostrarPrecioIndividual,
             })
             .select("id")
             .single();
