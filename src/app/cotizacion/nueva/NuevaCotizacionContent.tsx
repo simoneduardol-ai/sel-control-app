@@ -90,7 +90,7 @@ export default function NuevaCotizacionContent() {
       return;
     }
     const etapasConItems = etapas.filter(
-      (e) => e.nombre.trim() && e.items.some((i) => i.catalogoItemId)
+      (e) => e.nombre.trim() && e.items.some((i) => i.nombre.trim())
     );
     if (etapasConItems.length === 0) {
       setError("Agrega al menos una etapa con un ítem.");
@@ -131,18 +131,40 @@ export default function NuevaCotizacionContent() {
         if (errEtapa) throw errEtapa;
 
         for (const item of etapa.items) {
-          if (!item.catalogoItemId) continue;
+          if (!item.nombre.trim()) continue;
 
           const totalMaterialUnitario = item.materiales.reduce(
             (s, m) => s + m.costoUnitario * m.cantidadPorUnidad,
             0
           );
 
+          // Si el ítem es nuevo y se marcó "agregar a mi Catálogo", lo creamos
+          // ahí primero — sus materiales/equipos quedan obligados a Maestros,
+          // porque un ítem del Catálogo necesita referencias reales para
+          // poder actualizar precios en vivo más adelante.
+          let catalogoItemId = item.catalogoItemId;
+          const forzarMaestros = !catalogoItemId && item.agregarACatalogo;
+
+          if (forzarMaestros) {
+            const { data: nuevoCatalogoItem, error: errCatItem } = await supabase
+              .from("catalogo_items")
+              .insert({
+                nombre_item: item.nombre.trim(),
+                unidad: item.unidad || "unidad",
+                categoria: etapa.nombre.trim(),
+                costo_mano_obra_referencial: item.costoManoObraUnitario,
+              })
+              .select("id")
+              .single();
+            if (errCatItem) throw errCatItem;
+            catalogoItemId = nuevoCatalogoItem.id;
+          }
+
           const { data: itemRow, error: errItem } = await supabase
             .from("cotizacion_items_apu")
             .insert({
               etapa_id: etapaRow.id,
-              catalogo_item_id: item.catalogoItemId,
+              catalogo_item_id: catalogoItemId,
               descripcion_item: item.nombre,
               cantidad: item.cantidad,
               unidad: item.unidad,
@@ -153,12 +175,15 @@ export default function NuevaCotizacionContent() {
             .single();
           if (errItem) throw errItem;
 
-          // Guardar materiales editados de esta línea (creando nuevos si hace falta)
+          // Guardar materiales de esta línea: a Maestros si corresponde
+          // (vinculado o casilla marcada), si no, quedan solo en esta cotización.
           for (const linea of item.materiales) {
             if (!linea.nombre.trim()) continue;
             let materialId = linea.materialId;
+            const debeCrearMaestro =
+              !materialId && (forzarMaestros || linea.agregarAMaestros);
 
-            if (!materialId) {
+            if (debeCrearMaestro) {
               const { data: nuevoMaterial, error: errMat } = await supabase
                 .from("materiales_maestros")
                 .insert({
@@ -172,20 +197,43 @@ export default function NuevaCotizacionContent() {
               materialId = nuevoMaterial.id;
             }
 
-            await supabase.from("cotizacion_item_materiales").insert({
-              cotizacion_item_id: itemRow.id,
-              material_id: materialId,
-              cantidad_total: linea.cantidadPorUnidad * item.cantidad,
-              costo_unitario: linea.costoUnitario,
-            });
+            if (materialId) {
+              await supabase.from("cotizacion_item_materiales").insert({
+                cotizacion_item_id: itemRow.id,
+                material_id: materialId,
+                cantidad_total: linea.cantidadPorUnidad * item.cantidad,
+                costo_unitario: linea.costoUnitario,
+              });
+            } else {
+              await supabase.from("cotizacion_item_materiales").insert({
+                cotizacion_item_id: itemRow.id,
+                material_id: null,
+                nombre_libre: linea.nombre.trim(),
+                unidad_libre: linea.unidad || "un",
+                cantidad_total: linea.cantidadPorUnidad * item.cantidad,
+                costo_unitario: linea.costoUnitario,
+              });
+            }
+
+            // Si el ítem se agrega al Catálogo, el material también debe
+            // quedar vinculado como plantilla del ítem.
+            if (forzarMaestros && catalogoItemId) {
+              await supabase.from("catalogo_item_materiales").insert({
+                catalogo_item_id: catalogoItemId,
+                material_id: materialId,
+                cantidad_por_unidad: linea.cantidadPorUnidad,
+              });
+            }
           }
 
-          // Guardar equipos editados de esta línea (creando nuevos si hace falta)
+          // Guardar equipos de esta línea, mismo criterio que materiales
           for (const linea of item.equipos) {
             if (!linea.nombre.trim()) continue;
             let equipoId = linea.equipoId;
+            const debeCrearMaestro =
+              !equipoId && (forzarMaestros || linea.agregarAMaestros);
 
-            if (!equipoId) {
+            if (debeCrearMaestro) {
               const { data: nuevoEquipo, error: errEq } = await supabase
                 .from("equipos_maestros")
                 .insert({
@@ -199,12 +247,31 @@ export default function NuevaCotizacionContent() {
               equipoId = nuevoEquipo.id;
             }
 
-            await supabase.from("cotizacion_item_equipos").insert({
-              cotizacion_item_id: itemRow.id,
-              equipo_id: equipoId,
-              cantidad_total: linea.cantidadPorUnidad * item.cantidad,
-              costo_unitario: linea.costoUnitario,
-            });
+            if (equipoId) {
+              await supabase.from("cotizacion_item_equipos").insert({
+                cotizacion_item_id: itemRow.id,
+                equipo_id: equipoId,
+                cantidad_total: linea.cantidadPorUnidad * item.cantidad,
+                costo_unitario: linea.costoUnitario,
+              });
+            } else {
+              await supabase.from("cotizacion_item_equipos").insert({
+                cotizacion_item_id: itemRow.id,
+                equipo_id: null,
+                nombre_libre: linea.nombre.trim(),
+                unidad_libre: linea.unidad || "un",
+                cantidad_total: linea.cantidadPorUnidad * item.cantidad,
+                costo_unitario: linea.costoUnitario,
+              });
+            }
+
+            if (forzarMaestros && catalogoItemId) {
+              await supabase.from("catalogo_item_equipos").insert({
+                catalogo_item_id: catalogoItemId,
+                equipo_id: equipoId,
+                cantidad_por_unidad: linea.cantidadPorUnidad,
+              });
+            }
           }
         }
       }

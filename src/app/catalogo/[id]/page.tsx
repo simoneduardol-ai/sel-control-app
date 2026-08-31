@@ -75,6 +75,7 @@ export default function EditarItemCatalogoPage() {
               unidad: m.unidad,
               costoUnitario: Number(m.costo_referencial),
               cantidadPorUnidad: Number(v.cantidad_por_unidad),
+              agregarAMaestros: true,
             };
           })
         );
@@ -102,6 +103,7 @@ export default function EditarItemCatalogoPage() {
               unidad: eq.unidad,
               costoUnitario: Number(eq.precio_unitario),
               cantidadPorUnidad: Number(v.cantidad_por_unidad),
+              agregarAMaestros: true,
             };
           })
         );

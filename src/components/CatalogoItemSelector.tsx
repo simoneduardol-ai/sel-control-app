@@ -24,6 +24,7 @@ export type ItemCotizacionLinea = {
   materiales: MaterialLinea[];
   equipos: EquipoLinea[];
   expandido: boolean;
+  agregarACatalogo: boolean;
 };
 
 export default function CatalogoItemSelector({
@@ -69,6 +70,7 @@ export default function CatalogoItemSelector({
         materiales: [],
         equipos: [],
         expandido: true,
+        agregarACatalogo: false,
       },
     ]);
     setFilaAbierta(nuevoId);
@@ -94,6 +96,7 @@ export default function CatalogoItemSelector({
         unidad: m.unidad,
         costoUnitario: Number(m.costo_referencial),
         cantidadPorUnidad: Number(v.cantidad_por_unidad),
+        agregarAMaestros: true,
       };
     });
 
@@ -117,6 +120,7 @@ export default function CatalogoItemSelector({
         unidad: eq.unidad,
         costoUnitario: Number(eq.precio_unitario),
         cantidadPorUnidad: Number(v.cantidad_por_unidad),
+        agregarAMaestros: true,
       };
     });
 
@@ -203,9 +207,19 @@ export default function CatalogoItemSelector({
             {linea.nombre.trim() && linea.expandido && (
               <div className="mt-4 space-y-4">
                 {!linea.catalogoItemId && (
-                  <p className="text-accent text-xs -mt-1">
-                    Ítem nuevo — no está en tu Catálogo, se usa solo en esta cotización.
-                  </p>
+                  <label className="flex items-center gap-1.5 text-accent text-xs -mt-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={linea.agregarACatalogo}
+                      onChange={(e) =>
+                        actualizar(linea.rowId, { agregarACatalogo: e.target.checked })
+                      }
+                      className="h-3.5 w-3.5 accent-accent"
+                    />
+                    {linea.agregarACatalogo
+                      ? "Se agregará a tu Catálogo de ítems"
+                      : "Ítem nuevo — se usa solo en esta cotización"}
+                  </label>
                 )}
                 <div className="grid grid-cols-3 gap-3">
                   <div>
@@ -257,6 +271,7 @@ export default function CatalogoItemSelector({
                   <MaterialesEditor
                     lineas={linea.materiales}
                     onChange={(materiales) => actualizar(linea.rowId, { materiales })}
+                    permitirLibre
                   />
                 </div>
 
@@ -267,6 +282,7 @@ export default function CatalogoItemSelector({
                   <EquiposItemEditor
                     lineas={linea.equipos}
                     onChange={(equipos) => actualizar(linea.rowId, { equipos })}
+                    permitirLibre
                   />
                 </div>
 

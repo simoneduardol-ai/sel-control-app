@@ -59,24 +59,7 @@ export default function ProveedoresPage() {
 
     if (!lista) return;
     setListaId(lista.id);
-
-    const agrupados = (lista.json_materiales_agrupados ?? []) as MaterialAgrupado[];
-    if (agrupados.length === 0) {
-      setMateriales([]);
-      return;
-    }
-
-    const ids = agrupados.map((m) => m.material_id);
-    const { data: maestros } = await supabase
-      .from("materiales_maestros")
-      .select("id, nombre, unidad")
-      .in("id", ids);
-
-    const conNombre = agrupados.map((m) => {
-      const info = maestros?.find((x) => x.id === m.material_id);
-      return { ...m, nombre: info?.nombre ?? "Material", unidad: info?.unidad ?? "un" };
-    });
-    setMateriales(conNombre);
+    setMateriales((lista.json_materiales_agrupados ?? []) as MaterialAgrupado[]);
   }, [cotizacionId]);
 
   const cargarListaEquipos = useCallback(async () => {
@@ -87,23 +70,7 @@ export default function ProveedoresPage() {
       .single();
 
     if (!lista) return;
-    const agrupados = (lista.json_equipos_agrupados ?? []) as EquipoAgrupado[];
-    if (agrupados.length === 0) {
-      setEquipos([]);
-      return;
-    }
-
-    const ids = agrupados.map((e) => e.equipo_id);
-    const { data: maestros } = await supabase
-      .from("equipos_maestros")
-      .select("id, nombre, unidad")
-      .in("id", ids);
-
-    const conNombre = agrupados.map((e) => {
-      const info = maestros?.find((x) => x.id === e.equipo_id);
-      return { ...e, nombre: info?.nombre ?? "Equipo", unidad: info?.unidad ?? "un" };
-    });
-    setEquipos(conNombre);
+    setEquipos((lista.json_equipos_agrupados ?? []) as EquipoAgrupado[]);
   }, [cotizacionId]);
 
   const cargarProveedores = useCallback(async () => {
@@ -264,7 +231,7 @@ export default function ProveedoresPage() {
                 <div className="border border-border rounded-xl overflow-hidden bg-surface divide-y divide-border">
                   {materiales.map((m) => (
                     <div
-                      key={m.material_id}
+                      key={m.material_id ?? m.nombre}
                       className="flex justify-between px-4 py-2.5 text-sm"
                     >
                       <span>{m.nombre}</span>
@@ -294,7 +261,7 @@ export default function ProveedoresPage() {
               <div className="border border-border rounded-xl overflow-hidden bg-surface divide-y divide-border">
                 {equipos.map((e) => (
                   <div
-                    key={e.equipo_id}
+                    key={e.equipo_id ?? e.nombre}
                     className="flex justify-between px-4 py-2.5 text-sm"
                   >
                     <span>{e.nombre}</span>
@@ -345,7 +312,7 @@ export default function ProveedoresPage() {
                     {solicitud && materiales.length > 0 && (
                       <div className="mt-3 space-y-2">
                         {materiales.map((m) => (
-                          <div key={m.material_id} className="flex items-center gap-2">
+                          <div key={m.material_id ?? m.nombre} className="flex items-center gap-2">
                             <span className="text-xs flex-1 truncate">{m.nombre}</span>
                             <input
                               type="number"

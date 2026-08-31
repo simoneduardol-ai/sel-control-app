@@ -11,6 +11,7 @@ export type MaterialLinea = {
   unidad: string;
   costoUnitario: number;
   cantidadPorUnidad: number;
+  agregarAMaestros: boolean;
 };
 
 type MaterialMaestro = {
@@ -23,9 +24,14 @@ type MaterialMaestro = {
 export default function MaterialesEditor({
   lineas,
   onChange,
+  permitirLibre = false,
 }: {
   lineas: MaterialLinea[];
   onChange: (lineas: MaterialLinea[]) => void;
+  /** Si es true (dentro de una cotización), permite dejar el material "solo
+   * para esta cotización" sin guardarlo en Materiales maestros. Si es false
+   * (dentro del Catálogo), siempre se crea en Materiales maestros. */
+  permitirLibre?: boolean;
 }) {
   const supabase = createClient();
   const [catalogo, setCatalogo] = useState<MaterialMaestro[]>([]);
@@ -60,6 +66,7 @@ export default function MaterialesEditor({
         unidad: "",
         costoUnitario: 0,
         cantidadPorUnidad: 1,
+        agregarAMaestros: true,
       },
     ]);
     setFilaAbierta(nuevoId);
@@ -109,6 +116,7 @@ export default function MaterialesEditor({
                       : catalogo
                     ).slice(0, 30)
                   : [];
+              const esNuevo = !linea.materialId && linea.nombre.trim().length >= 2;
 
               return (
                 <tr key={linea.rowId} className="border-b border-border last:border-0 relative">
@@ -121,10 +129,29 @@ export default function MaterialesEditor({
                       placeholder="Buscar o escribir material..."
                       className="w-full bg-transparent text-base focus:outline-none"
                     />
-                    {!linea.materialId && linea.nombre.trim().length >= 2 && (
+                    {esNuevo && !permitirLibre && (
                       <span className="text-accent text-xs block">
                         Nuevo material — se creará al guardar
                       </span>
+                    )}
+                    {esNuevo && permitirLibre && (
+                      <label className="flex items-center gap-1.5 text-xs mt-0.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={linea.agregarAMaestros}
+                          onChange={(e) =>
+                            actualizar(linea.rowId, {
+                              agregarAMaestros: e.target.checked,
+                            })
+                          }
+                          className="h-3.5 w-3.5 accent-accent"
+                        />
+                        <span className="text-accent">
+                          {linea.agregarAMaestros
+                            ? "Se agregará a Materiales maestros"
+                            : "Solo para esta cotización"}
+                        </span>
+                      </label>
                     )}
 
                     {filaAbierta === linea.rowId && sugerencias.length > 0 && (
@@ -212,8 +239,7 @@ export default function MaterialesEditor({
         Haz clic en el campo para ver la lista completa de materiales en orden
         alfabético, o escribe para filtrar. Si eliges uno existente queda
         vinculado en vivo (editar el precio en Materiales maestros lo actualiza
-        aquí también). Si escribes un nombre nuevo, se crea un material maestro
-        con lo que ingreses.
+        aquí también).
       </p>
     </div>
   );
