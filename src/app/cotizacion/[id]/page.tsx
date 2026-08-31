@@ -4,6 +4,8 @@ import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { StatusBadge } from "@/components/StatusBadge";
 import Sidebar from "@/components/Sidebar";
+import EmitirPdfButton from "@/components/EmitirPdfButton";
+import { Users } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +56,16 @@ export default async function CotizacionDetallePage({
           <span className="font-display text-xl">
             ${total.toLocaleString("es-CL")}
           </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <EmitirPdfButton cotizacionId={cotizacion.id} />
+          <Link
+            href={`/cotizacion/${cotizacion.id}/proveedores`}
+            className="flex items-center justify-center gap-2 rounded-xl border border-border bg-surface py-3 text-sm font-medium"
+          >
+            <Users size={16} /> Proveedores
+          </Link>
         </div>
 
         {(etapas ?? []).map((etapa) => (

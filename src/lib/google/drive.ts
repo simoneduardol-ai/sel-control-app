@@ -76,23 +76,25 @@ async function buscarOCrearCarpeta(
 }
 
 /**
- * Sube un PDF a Drive dentro de la carpeta del cliente correspondiente,
+ * Sube un PDF a Drive dentro de una carpeta raíz / carpeta de cliente,
  * creando la estructura de carpetas si no existe. Devuelve el link al archivo.
  */
 export async function subirPdfACarpetaCliente({
   refreshToken,
+  carpetaRaiz = CARPETA_RAIZ_NOMBRE,
   nombreCliente,
   nombreArchivo,
   pdfBuffer,
 }: {
   refreshToken: string;
+  carpetaRaiz?: string;
   nombreCliente: string;
   nombreArchivo: string;
   pdfBuffer: Buffer;
 }) {
   const drive = getDriveClient(refreshToken);
 
-  const raizId = await buscarOCrearCarpeta(drive, CARPETA_RAIZ_NOMBRE);
+  const raizId = await buscarOCrearCarpeta(drive, carpetaRaiz);
   const clienteId = await buscarOCrearCarpeta(drive, nombreCliente, raizId);
 
   const { Readable } = await import("stream");
