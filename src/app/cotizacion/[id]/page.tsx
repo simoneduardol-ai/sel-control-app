@@ -6,6 +6,8 @@ import { StatusBadge } from "@/components/StatusBadge";
 import Sidebar from "@/components/Sidebar";
 import EmitirPdfButton from "@/components/EmitirPdfButton";
 import MarcarAprobadaButton from "@/components/MarcarAprobadaButton";
+import RevertirCotizacionButton from "@/components/RevertirCotizacionButton";
+import HistorialEstados from "@/components/HistorialEstados";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +38,14 @@ export default async function CotizacionDetallePage({
     .select("id, avance_porcentaje, estado")
     .eq("cotizacion_id", id)
     .maybeSingle();
+
+  const { data: historial } = await supabase
+    .from("auditoria_estados")
+    .select("id, estado_anterior, estado_nuevo, motivo, created_at")
+    .eq("entidad_tipo", "cotizacion")
+    .eq("entidad_id", id)
+    .order("created_at", { ascending: false })
+    .limit(15);
 
   const cliente = cotizacion.clientes as unknown as {
     nombre: string;
@@ -85,7 +95,7 @@ export default async function CotizacionDetallePage({
             className="flex items-center justify-between bg-ok/10 border border-ok/20 rounded-xl p-4"
           >
             <span className="flex items-center gap-2 text-sm font-medium text-ok">
-              <HardHat size={16} /> Obra en ejecución · {obraVinculada.avance_porcentaje}%
+              <HardHat size={16} /> Obra {obraVinculada.estado === "EN_CURSO" ? "en ejecución" : obraVinculada.estado.toLowerCase()} · {obraVinculada.avance_porcentaje}%
             </span>
             <span className="text-ok text-sm font-medium">Ver →</span>
           </Link>
@@ -103,6 +113,12 @@ export default async function CotizacionDetallePage({
 
         {cotizacion.estado !== "APROBADA" && (
           <MarcarAprobadaButton cotizacionId={cotizacion.id} />
+        )}
+        {cotizacion.estado === "APROBADA" && (
+          <RevertirCotizacionButton
+            cotizacionId={cotizacion.id}
+            tieneObraEnCurso={obraVinculada?.estado === "EN_CURSO"}
+          />
         )}
 
         {(etapas ?? []).map((etapa) => (
@@ -144,6 +160,8 @@ export default async function CotizacionDetallePage({
             </Link>
           </p>
         )}
+
+        <HistorialEstados entradas={historial ?? []} />
       </div>
       </main>
     </div>

@@ -3,6 +3,9 @@ import Link from "next/link";
 import { ArrowLeft, FileText } from "lucide-react";
 import { notFound } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
+import ObraAccionesEstado from "@/components/ObraAccionesEstado";
+import HistorialEstados from "@/components/HistorialEstados";
+import { StatusBadge } from "@/components/StatusBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -22,11 +25,25 @@ export default async function ObraDetallePage({
 
   if (!obra) notFound();
 
+  const { data: cotizacion } = await supabase
+    .from("cotizaciones")
+    .select("id, numero_cotizacion")
+    .eq("id", obra.cotizacion_id)
+    .single();
+
   const { data: bitacora } = await supabase
     .from("bitacora_obra")
     .select("*")
     .eq("obra_id", id)
     .order("fecha_visita", { ascending: false });
+
+  const { data: historial } = await supabase
+    .from("auditoria_estados")
+    .select("id, estado_anterior, estado_nuevo, motivo, created_at")
+    .eq("entidad_tipo", "obra")
+    .eq("entidad_id", id)
+    .order("created_at", { ascending: false })
+    .limit(15);
 
   const cliente = obra.clientes as unknown as {
     nombre: string;
@@ -41,7 +58,8 @@ export default async function ObraDetallePage({
         <Link href="/" className="p-1 -ml-1 text-text-dim md:hidden">
           <ArrowLeft size={22} />
         </Link>
-        <h1 className="font-display text-lg">{cliente?.nombre}</h1>
+        <h1 className="font-display text-lg flex-1">{cliente?.nombre}</h1>
+        <StatusBadge status={obra.estado} />
       </header>
 
       <div className="px-5 md:px-8 py-5 max-w-2xl space-y-6">
@@ -50,7 +68,10 @@ export default async function ObraDetallePage({
           className="flex items-center justify-between bg-surface border border-border rounded-xl p-4"
         >
           <span className="flex items-center gap-2 text-sm font-medium">
-            <FileText size={16} /> Ver cotización de esta obra
+            <FileText size={16} /> Ver cotización
+            {cotizacion?.numero_cotizacion && (
+              <span className="text-text-dim">({cotizacion.numero_cotizacion})</span>
+            )}
           </span>
           <span className="text-accent text-sm font-medium">Ver →</span>
         </Link>
@@ -84,6 +105,13 @@ export default async function ObraDetallePage({
           </div>
         </div>
 
+        <ObraAccionesEstado
+          obraId={obra.id}
+          cotizacionId={obra.cotizacion_id}
+          numeroCotizacion={cotizacion?.numero_cotizacion ?? null}
+          estadoActual={obra.estado}
+        />
+
         <section>
           <h2 className="text-sm font-medium text-text-dim mb-3">Bitácora</h2>
           {(bitacora ?? []).length === 0 ? (
@@ -108,6 +136,8 @@ export default async function ObraDetallePage({
             </div>
           )}
         </section>
+
+        <HistorialEstados entradas={historial ?? []} />
       </div>
       </main>
     </div>

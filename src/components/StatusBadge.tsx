@@ -12,6 +12,8 @@ const STATUS_STYLES: Record<string, string> = {
   // obras
   EN_CURSO: "bg-info/15 text-info",
   FINALIZADA: "bg-ok/15 text-ok",
+  PAUSADA: "bg-warn/15 text-warn",
+  ANULADA: "bg-danger/15 text-danger",
   // seguimiento de visitas (bitácora)
   "En progreso": "bg-info/15 text-info",
   "Requiere seguimiento": "bg-warn/15 text-warn",
@@ -29,6 +31,8 @@ const STATUS_LABELS: Record<string, string> = {
   RECHAZADA: "Rechazada",
   EN_CURSO: "En curso",
   FINALIZADA: "Finalizada",
+  PAUSADA: "Pausada",
+  ANULADA: "Anulada",
 };
 
 export function StatusBadge({ status }: { status: string }) {
