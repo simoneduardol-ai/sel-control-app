@@ -63,6 +63,7 @@ export async function POST(
     etapas: etapasPdf,
     totalMateriales: Number(cotizacion.total_materiales) || 0,
     totalManoObra: Number(cotizacion.total_mano_obra) || 0,
+    totalEquipos: Number(cotizacion.total_equipos) || 0,
     mostrarPrecioPorItem: cotizacion.mostrar_precio_por_item,
     mostrarTotalMateriales: cotizacion.mostrar_total_materiales,
     fecha: new Date().toLocaleDateString("es-CL", { dateStyle: "long" }),

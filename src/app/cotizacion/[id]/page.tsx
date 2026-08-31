@@ -37,7 +37,9 @@ export default async function CotizacionDetallePage({
   } | null;
 
   const total =
-    (cotizacion.total_materiales ?? 0) + (cotizacion.total_mano_obra ?? 0);
+    (cotizacion.total_materiales ?? 0) +
+    (cotizacion.total_mano_obra ?? 0) +
+    (cotizacion.total_equipos ?? 0);
 
   return (
     <div className="min-h-dvh bg-bg md:flex">

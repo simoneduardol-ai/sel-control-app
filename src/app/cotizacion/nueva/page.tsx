@@ -52,7 +52,12 @@ export default function NuevaCotizacionPage() {
       sum + e.items.reduce((s, i) => s + i.cantidad * i.costoMaterialUnitario, 0),
     0
   );
-  const totalGeneral = totalManoObra + totalMateriales;
+  const totalEquipos = etapas.reduce(
+    (sum, e) =>
+      sum + e.items.reduce((s, i) => s + i.cantidad * i.costoEquipoUnitario, 0),
+    0
+  );
+  const totalGeneral = totalManoObra + totalMateriales + totalEquipos;
 
   async function guardar() {
     if (!cliente) {
@@ -76,6 +81,7 @@ export default function NuevaCotizacionPage() {
           estado: "BORRADOR",
           total_materiales: totalMateriales,
           total_mano_obra: totalManoObra,
+          total_equipos: totalEquipos,
           mostrar_precio_por_item: mostrarPrecioPorItem,
           mostrar_total_materiales: mostrarTotalMateriales,
         })
@@ -127,6 +133,22 @@ export default function NuevaCotizacionPage() {
               material_id: v.material_id,
               cantidad_total: Number(v.cantidad_por_unidad) * item.cantidad,
               costo_unitario: Number(m?.costo_referencial ?? 0),
+            });
+          }
+
+          // Copiar (snapshot) los equipos del ítem del catálogo, escalados por cantidad
+          const { data: vinculosEquipos } = await supabase
+            .from("catalogo_item_equipos")
+            .select("equipo_id, cantidad_por_unidad, equipos_maestros(precio_unitario)")
+            .eq("catalogo_item_id", item.catalogoItemId);
+
+          for (const v of vinculosEquipos ?? []) {
+            const eq = v.equipos_maestros as unknown as { precio_unitario: number } | null;
+            await supabase.from("cotizacion_item_equipos").insert({
+              cotizacion_item_id: itemRow.id,
+              equipo_id: v.equipo_id,
+              cantidad_total: Number(v.cantidad_por_unidad) * item.cantidad,
+              costo_unitario: Number(eq?.precio_unitario ?? 0),
             });
           }
         }
@@ -219,6 +241,12 @@ export default function NuevaCotizacionPage() {
                 <span className="text-text-dim">Materiales e insumos</span>
                 <span>${totalMateriales.toLocaleString("es-CL")}</span>
               </div>
+              {totalEquipos > 0 && (
+                <div className="flex justify-between text-sm py-1.5 border-b border-border pb-3 mb-3">
+                  <span className="text-text-dim">Equipos</span>
+                  <span>${totalEquipos.toLocaleString("es-CL")}</span>
+                </div>
+              )}
               <div className="flex justify-between font-display text-lg">
                 <span>Total</span>
                 <span>${totalGeneral.toLocaleString("es-CL")}</span>

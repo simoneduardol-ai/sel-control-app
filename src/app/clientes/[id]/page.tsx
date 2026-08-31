@@ -23,7 +23,7 @@ export default async function ClienteDetallePage({
 
   const { data: cotizaciones } = await supabase
     .from("cotizaciones")
-    .select("id, estado, total_materiales, total_mano_obra, created_at")
+    .select("id, estado, total_materiales, total_mano_obra, total_equipos, created_at")
     .eq("cliente_id", id)
     .order("created_at", { ascending: false });
 
@@ -32,7 +32,7 @@ export default async function ClienteDetallePage({
     href: `/cotizacion/${c.id}`,
     cliente: cliente.nombre,
     detalle: `$${(
-      (c.total_materiales ?? 0) + (c.total_mano_obra ?? 0)
+      (c.total_materiales ?? 0) + (c.total_mano_obra ?? 0) + (c.total_equipos ?? 0)
     ).toLocaleString("es-CL")}`,
     status: c.estado,
     fecha: c.created_at,

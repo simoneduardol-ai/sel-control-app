@@ -21,7 +21,7 @@ export default async function DashboardPage() {
       .order("fecha", { ascending: false }),
     supabase
       .from("cotizaciones")
-      .select("id, estado, total_materiales, total_mano_obra, created_at, clientes(nombre)")
+      .select("id, estado, total_materiales, total_mano_obra, total_equipos, created_at, clientes(nombre)")
       .order("created_at", { ascending: false }),
     supabase
       .from("obras_ejecucion")
@@ -38,7 +38,7 @@ export default async function DashboardPage() {
   );
   const obrasEnCurso = obras.filter((o) => o.estado === "EN_CURSO");
   const pipelineTotal = cotizacionesAbiertas.reduce(
-    (sum, c) => sum + (c.total_materiales ?? 0) + (c.total_mano_obra ?? 0),
+    (sum, c) => sum + (c.total_materiales ?? 0) + (c.total_mano_obra ?? 0) + (c.total_equipos ?? 0),
     0
   );
 
@@ -62,7 +62,7 @@ export default async function DashboardPage() {
       (c.clientes as unknown as { nombre: string } | null)?.nombre ??
       "Cliente sin nombre",
     detalle: `$${(
-      (c.total_materiales ?? 0) + (c.total_mano_obra ?? 0)
+      (c.total_materiales ?? 0) + (c.total_mano_obra ?? 0) + (c.total_equipos ?? 0)
     ).toLocaleString("es-CL")}`,
     status: c.estado,
     fecha: c.created_at,

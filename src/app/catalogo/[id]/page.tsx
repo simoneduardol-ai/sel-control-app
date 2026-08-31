@@ -7,6 +7,7 @@ import Link from "next/link";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import MaterialesEditor, { type MaterialLinea } from "@/components/MaterialesEditor";
+import EquiposItemEditor, { type EquipoLinea } from "@/components/EquiposItemEditor";
 
 const ETAPAS = [
   "Empalme",
@@ -34,6 +35,7 @@ export default function EditarItemCatalogoPage() {
   const [manoObra, setManoObra] = useState(0);
   const [observaciones, setObservaciones] = useState("");
   const [materiales, setMateriales] = useState<MaterialLinea[]>([]);
+  const [equipos, setEquipos] = useState<EquipoLinea[]>([]);
 
   useEffect(() => {
     if (esNuevo) return;
@@ -78,6 +80,33 @@ export default function EditarItemCatalogoPage() {
         );
       }
 
+      const { data: vinculosEquipos } = await supabase
+        .from("catalogo_item_equipos")
+        .select("id, cantidad_por_unidad, equipos_maestros(id, nombre, marca, unidad, precio_unitario)")
+        .eq("catalogo_item_id", params.id);
+
+      if (vinculosEquipos) {
+        setEquipos(
+          vinculosEquipos.map((v) => {
+            const eq = v.equipos_maestros as unknown as {
+              id: string;
+              nombre: string;
+              marca: string | null;
+              unidad: string;
+              precio_unitario: number;
+            };
+            return {
+              rowId: crypto.randomUUID(),
+              equipoId: eq.id,
+              nombre: eq.marca ? `${eq.nombre} (${eq.marca})` : eq.nombre,
+              unidad: eq.unidad,
+              costoUnitario: Number(eq.precio_unitario),
+              cantidadPorUnidad: Number(v.cantidad_por_unidad),
+            };
+          })
+        );
+      }
+
       setCargando(false);
     })();
   }, [esNuevo, params.id]);
@@ -86,7 +115,11 @@ export default function EditarItemCatalogoPage() {
     (sum, l) => sum + l.costoUnitario * l.cantidadPorUnidad,
     0
   );
-  const totalVenta = manoObra + totalMateriales;
+  const totalEquipos = equipos.reduce(
+    (sum, l) => sum + l.costoUnitario * l.cantidadPorUnidad,
+    0
+  );
+  const totalVenta = manoObra + totalMateriales + totalEquipos;
 
   async function guardar() {
     if (!nombre.trim()) return;
@@ -127,6 +160,10 @@ export default function EditarItemCatalogoPage() {
           .from("catalogo_item_materiales")
           .delete()
           .eq("catalogo_item_id", itemId);
+        await supabase
+          .from("catalogo_item_equipos")
+          .delete()
+          .eq("catalogo_item_id", itemId);
       }
 
       // Resolver cada línea de material: crear si es nuevo, vincular si ya existe
@@ -156,6 +193,19 @@ export default function EditarItemCatalogoPage() {
             cantidad_por_unidad: linea.cantidadPorUnidad,
           });
         if (errVinculo) throw errVinculo;
+      }
+
+      // Vincular equipos (solo los que tienen equipoId — ya deben existir en Equipos)
+      for (const linea of equipos) {
+        if (!linea.equipoId) continue;
+        const { error: errEquipo } = await supabase
+          .from("catalogo_item_equipos")
+          .insert({
+            catalogo_item_id: itemId,
+            equipo_id: linea.equipoId,
+            cantidad_por_unidad: linea.cantidadPorUnidad,
+          });
+        if (errEquipo) throw errEquipo;
       }
 
       router.push("/catalogo");
@@ -282,13 +332,20 @@ export default function EditarItemCatalogoPage() {
             )}
           </div>
 
-          {/* Columna derecha: materiales + resumen */}
+          {/* Columna derecha: materiales + equipos + resumen */}
           <div className="space-y-6">
             <div>
               <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">
                 Materiales e insumos
               </h2>
               <MaterialesEditor lineas={materiales} onChange={setMateriales} />
+            </div>
+
+            <div>
+              <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">
+                Equipos (cuando aplique)
+              </h2>
+              <EquiposItemEditor lineas={equipos} onChange={setEquipos} />
             </div>
 
             <div className="border border-border rounded-xl bg-surface p-4">
@@ -299,11 +356,17 @@ export default function EditarItemCatalogoPage() {
                 <span className="text-text-dim">Mano de obra</span>
                 <span>${manoObra.toLocaleString("es-CL")}</span>
               </div>
-              <div className="flex justify-between text-sm py-1.5 border-b border-border pb-3 mb-3">
+              <div className="flex justify-between text-sm py-1.5">
                 <span className="text-text-dim">Materiales e insumos</span>
                 <span>${totalMateriales.toLocaleString("es-CL")}</span>
               </div>
-              <div className="flex justify-between font-display text-lg">
+              {totalEquipos > 0 && (
+                <div className="flex justify-between text-sm py-1.5">
+                  <span className="text-text-dim">Equipos</span>
+                  <span>${totalEquipos.toLocaleString("es-CL")}</span>
+                </div>
+              )}
+              <div className="flex justify-between font-display text-lg border-t border-border pt-3 mt-2">
                 <span>Precio unitario de venta</span>
                 <span>${totalVenta.toLocaleString("es-CL")}</span>
               </div>

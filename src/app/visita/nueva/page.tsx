@@ -18,6 +18,17 @@ import Sidebar from "@/components/Sidebar";
 
 type Medida = { etiqueta: string; valor: string };
 
+const ETIQUETAS_DISPONIBLES = [
+  "Cliente nuevo",
+  "Seguimiento",
+  "VIP",
+  "Urgente",
+  "Presupuesto",
+  "Recurrente",
+  "Adulto mayor",
+  "Vista inicial",
+];
+
 export default function NuevaVisitaPage() {
   const router = useRouter();
   const supabase = createClient();
@@ -31,7 +42,7 @@ export default function NuevaVisitaPage() {
   const [medidas, setMedidas] = useState<Medida[]>([{ etiqueta: "", valor: "" }]);
   const [notas, setNotas] = useState("");
   const [tipoTrabajo, setTipoTrabajo] = useState("");
-  const [etiquetasTexto, setEtiquetasTexto] = useState("");
+  const [etiquetasSeleccionadas, setEtiquetasSeleccionadas] = useState<string[]>([]);
   const [estadoSeguimiento, setEstadoSeguimiento] = useState("En progreso");
   const [referidoPor, setReferidoPor] = useState("");
   const [equiposUtilizados, setEquiposUtilizados] = useState("");
@@ -162,10 +173,7 @@ export default function NuevaVisitaPage() {
           prompt_diagrama_ia: prompt,
           estado: "pendiente",
           tipo_trabajo: tipoTrabajo || null,
-          etiquetas: etiquetasTexto
-            .split(",")
-            .map((e) => e.trim())
-            .filter(Boolean),
+          etiquetas: etiquetasSeleccionadas,
           estado_seguimiento: estadoSeguimiento || null,
           referido_por: referidoPor || null,
           equipos_utilizados: equiposUtilizados || null,
@@ -353,12 +361,32 @@ export default function NuevaVisitaPage() {
               placeholder="Tipo de trabajo (ej: Revisión/Diagnóstico, Cotización, Reparación)"
               className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
             />
-            <input
-              value={etiquetasTexto}
-              onChange={(e) => setEtiquetasTexto(e.target.value)}
-              placeholder="Etiquetas separadas por coma (ej: Cliente nuevo, VIP)"
-              className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-            />
+            <div>
+              <p className="text-xs text-text-dim mb-1.5">Etiquetas</p>
+              <div className="flex flex-wrap gap-2">
+                {ETIQUETAS_DISPONIBLES.map((et) => {
+                  const activa = etiquetasSeleccionadas.includes(et);
+                  return (
+                    <button
+                      key={et}
+                      type="button"
+                      onClick={() =>
+                        setEtiquetasSeleccionadas((prev) =>
+                          activa ? prev.filter((e) => e !== et) : [...prev, et]
+                        )
+                      }
+                      className={`rounded-full px-3 py-1.5 text-sm border transition ${
+                        activa
+                          ? "bg-accent text-accent-text border-accent"
+                          : "bg-surface text-text-dim border-border"
+                      }`}
+                    >
+                      {et}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <select
                 value={estadoSeguimiento}

@@ -15,6 +15,14 @@ type MaterialAgrupado = {
   unidad?: string;
 };
 
+type EquipoAgrupado = {
+  equipo_id: string;
+  cantidad_total: number;
+  costo_ref: number;
+  nombre?: string;
+  unidad?: string;
+};
+
 type Proveedor = { id: string; nombre: string; email: string | null; whatsapp: string | null };
 type Solicitud = { id: string; proveedor_id: string; estado: string };
 
@@ -27,6 +35,9 @@ export default function ProveedoresPage() {
   const [listaId, setListaId] = useState<string | null>(null);
   const [generando, setGenerando] = useState(false);
   const [copiado, setCopiado] = useState(false);
+
+  const [equipos, setEquipos] = useState<EquipoAgrupado[]>([]);
+  const [copiadoEquipos, setCopiadoEquipos] = useState(false);
 
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
@@ -68,6 +79,33 @@ export default function ProveedoresPage() {
     setMateriales(conNombre);
   }, [cotizacionId]);
 
+  const cargarListaEquipos = useCallback(async () => {
+    const { data: lista } = await supabase
+      .from("listas_equipos")
+      .select("json_equipos_agrupados")
+      .eq("cotizacion_id", cotizacionId)
+      .single();
+
+    if (!lista) return;
+    const agrupados = (lista.json_equipos_agrupados ?? []) as EquipoAgrupado[];
+    if (agrupados.length === 0) {
+      setEquipos([]);
+      return;
+    }
+
+    const ids = agrupados.map((e) => e.equipo_id);
+    const { data: maestros } = await supabase
+      .from("equipos_maestros")
+      .select("id, nombre, unidad")
+      .in("id", ids);
+
+    const conNombre = agrupados.map((e) => {
+      const info = maestros?.find((x) => x.id === e.equipo_id);
+      return { ...e, nombre: info?.nombre ?? "Equipo", unidad: info?.unidad ?? "un" };
+    });
+    setEquipos(conNombre);
+  }, [cotizacionId]);
+
   const cargarProveedores = useCallback(async () => {
     const { data } = await supabase.from("proveedores").select("*").order("nombre");
     setProveedores(data ?? []);
@@ -84,8 +122,9 @@ export default function ProveedoresPage() {
 
   useEffect(() => {
     cargarLista();
+    cargarListaEquipos();
     cargarProveedores();
-  }, [cargarLista, cargarProveedores]);
+  }, [cargarLista, cargarListaEquipos, cargarProveedores]);
 
   useEffect(() => {
     cargarSolicitudes();
@@ -94,8 +133,19 @@ export default function ProveedoresPage() {
   async function generarLista() {
     setGenerando(true);
     await supabase.rpc("generar_lista_materiales", { p_cotizacion_id: cotizacionId });
+    await supabase.rpc("generar_lista_equipos", { p_cotizacion_id: cotizacionId });
     await cargarLista();
+    await cargarListaEquipos();
     setGenerando(false);
+  }
+
+  function copiarListaEquipos() {
+    const texto = equipos
+      .map((e) => `${e.nombre} — ${e.cantidad_total} ${e.unidad}`)
+      .join("\n");
+    navigator.clipboard.writeText(texto);
+    setCopiadoEquipos(true);
+    setTimeout(() => setCopiadoEquipos(false), 2000);
   }
 
   function copiarLista() {
@@ -234,6 +284,35 @@ export default function ProveedoresPage() {
               </>
             )}
           </section>
+
+          {/* Lista de equipos (solo si aplica) */}
+          {equipos.length > 0 && (
+            <section>
+              <h2 className="text-sm font-medium text-text-dim mb-2">
+                Lista de equipos
+              </h2>
+              <div className="border border-border rounded-xl overflow-hidden bg-surface divide-y divide-border">
+                {equipos.map((e) => (
+                  <div
+                    key={e.equipo_id}
+                    className="flex justify-between px-4 py-2.5 text-sm"
+                  >
+                    <span>{e.nombre}</span>
+                    <span className="text-text-dim">
+                      {e.cantidad_total} {e.unidad}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={copiarListaEquipos}
+                className="mt-2 flex items-center gap-1.5 text-accent text-sm font-medium"
+              >
+                {copiadoEquipos ? <Check size={16} /> : <Copy size={16} />}
+                {copiadoEquipos ? "Copiado" : "Copiar lista de equipos"}
+              </button>
+            </section>
+          )}
 
           {/* Proveedores */}
           <section>

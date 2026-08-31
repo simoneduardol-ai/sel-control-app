@@ -20,6 +20,7 @@ export type ItemCotizacionLinea = {
   cantidad: number;
   costoManoObraUnitario: number;
   costoMaterialUnitario: number; // suma calculada de materiales del ítem × cantidad_por_unidad
+  costoEquipoUnitario: number; // suma calculada de equipos del ítem × cantidad_por_unidad
 };
 
 export default function CatalogoItemSelector({
@@ -63,6 +64,7 @@ export default function CatalogoItemSelector({
         cantidad: 1,
         costoManoObraUnitario: 0,
         costoMaterialUnitario: 0,
+        costoEquipoUnitario: 0,
       },
     ]);
     setFilaAbierta(nuevoId);
@@ -80,12 +82,23 @@ export default function CatalogoItemSelector({
       return sum + Number(v.cantidad_por_unidad) * Number(m?.costo_referencial ?? 0);
     }, 0);
 
+    const { data: vinculosEquipos } = await supabase
+      .from("catalogo_item_equipos")
+      .select("cantidad_por_unidad, equipos_maestros(precio_unitario)")
+      .eq("catalogo_item_id", item.id);
+
+    const costoEquipo = (vinculosEquipos ?? []).reduce((sum, v) => {
+      const eq = v.equipos_maestros as unknown as { precio_unitario: number } | null;
+      return sum + Number(v.cantidad_por_unidad) * Number(eq?.precio_unitario ?? 0);
+    }, 0);
+
     actualizar(rowId, {
       catalogoItemId: item.id,
       nombre: item.nombre_item,
       unidad: item.unidad,
       costoManoObraUnitario: Number(item.costo_mano_obra_referencial),
       costoMaterialUnitario: costoMaterial,
+      costoEquipoUnitario: costoEquipo,
     });
     setFilaAbierta(null);
   }
@@ -106,7 +119,8 @@ export default function CatalogoItemSelector({
               : [];
 
           const totalLinea =
-            linea.cantidad * (linea.costoManoObraUnitario + linea.costoMaterialUnitario);
+            linea.cantidad *
+            (linea.costoManoObraUnitario + linea.costoMaterialUnitario + linea.costoEquipoUnitario);
 
           return (
             <div

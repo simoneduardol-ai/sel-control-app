@@ -10,7 +10,7 @@ export default async function CotizacionesPage() {
   const supabase = await createClient();
   const { data: cotizaciones } = await supabase
     .from("cotizaciones")
-    .select("id, estado, total_materiales, total_mano_obra, created_at, clientes(nombre)")
+    .select("id, estado, total_materiales, total_mano_obra, total_equipos, created_at, clientes(nombre)")
     .order("created_at", { ascending: false });
 
   const rows: TableRow[] = (cotizaciones ?? []).map((c) => ({
@@ -20,7 +20,7 @@ export default async function CotizacionesPage() {
       (c.clientes as unknown as { nombre: string } | null)?.nombre ??
       "Cliente sin nombre",
     detalle: `$${(
-      (c.total_materiales ?? 0) + (c.total_mano_obra ?? 0)
+      (c.total_materiales ?? 0) + (c.total_mano_obra ?? 0) + (c.total_equipos ?? 0)
     ).toLocaleString("es-CL")}`,
     status: c.estado,
     fecha: c.created_at,

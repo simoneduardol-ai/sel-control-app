@@ -55,6 +55,7 @@ export async function generarPdfCotizacion({
   etapas,
   totalMateriales,
   totalManoObra,
+  totalEquipos = 0,
   mostrarPrecioPorItem,
   mostrarTotalMateriales,
   fecha,
@@ -64,11 +65,12 @@ export async function generarPdfCotizacion({
   etapas: EtapaPdf[];
   totalMateriales: number;
   totalManoObra: number;
+  totalEquipos?: number;
   mostrarPrecioPorItem: boolean;
   mostrarTotalMateriales: boolean;
   fecha: string;
 }): Promise<Buffer> {
-  const subtotal = totalMateriales + totalManoObra;
+  const subtotal = totalMateriales + totalManoObra + totalEquipos;
   const iva = subtotal * 0.19;
   const totalConIva = subtotal + iva;
 
