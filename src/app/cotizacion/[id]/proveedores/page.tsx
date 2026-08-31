@@ -4,8 +4,9 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { ArrowLeft, Copy, Check, Plus } from "lucide-react";
+import { ArrowLeft, Copy, Check, Plus, ImageDown } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
+import { generarImagenLista, descargarImagen } from "@/lib/imagenLista";
 
 type MaterialAgrupado = {
   material_id: string;
@@ -122,6 +123,32 @@ export default function ProveedoresPage() {
     navigator.clipboard.writeText(texto);
     setCopiado(true);
     setTimeout(() => setCopiado(false), 2000);
+  }
+
+  function descargarImagenMateriales() {
+    const dataUrl = generarImagenLista({
+      titulo: "Lista de materiales",
+      subtitulo: "Para cotizar — favor responder con precios",
+      filas: materiales.map((m) => ({
+        nombre: m.nombre ?? "Material",
+        cantidad: m.cantidad_total,
+        unidad: m.unidad ?? "un",
+      })),
+    });
+    descargarImagen(dataUrl, "lista-materiales.png");
+  }
+
+  function descargarImagenEquipos() {
+    const dataUrl = generarImagenLista({
+      titulo: "Lista de equipos",
+      subtitulo: "Para cotizar — favor responder con precios",
+      filas: equipos.map((e) => ({
+        nombre: e.nombre ?? "Equipo",
+        cantidad: e.cantidad_total,
+        unidad: e.unidad ?? "un",
+      })),
+    });
+    descargarImagen(dataUrl, "lista-equipos.png");
   }
 
   async function crearProveedor() {
@@ -241,13 +268,22 @@ export default function ProveedoresPage() {
                     </div>
                   ))}
                 </div>
-                <button
-                  onClick={copiarLista}
-                  className="mt-2 flex items-center gap-1.5 text-accent text-sm font-medium"
-                >
-                  {copiado ? <Check size={16} /> : <Copy size={16} />}
-                  {copiado ? "Copiado" : "Copiar lista (para WhatsApp/correo)"}
-                </button>
+                <div className="flex gap-4 mt-2">
+                  <button
+                    onClick={copiarLista}
+                    className="flex items-center gap-1.5 text-accent text-sm font-medium"
+                  >
+                    {copiado ? <Check size={16} /> : <Copy size={16} />}
+                    {copiado ? "Copiado" : "Copiar como texto"}
+                  </button>
+                  <button
+                    onClick={descargarImagenMateriales}
+                    className="flex items-center gap-1.5 text-accent text-sm font-medium"
+                  >
+                    <ImageDown size={16} />
+                    Descargar imagen (WhatsApp)
+                  </button>
+                </div>
               </>
             )}
           </section>
@@ -271,13 +307,22 @@ export default function ProveedoresPage() {
                   </div>
                 ))}
               </div>
-              <button
-                onClick={copiarListaEquipos}
-                className="mt-2 flex items-center gap-1.5 text-accent text-sm font-medium"
-              >
-                {copiadoEquipos ? <Check size={16} /> : <Copy size={16} />}
-                {copiadoEquipos ? "Copiado" : "Copiar lista de equipos"}
-              </button>
+              <div className="flex gap-4 mt-2">
+                <button
+                  onClick={copiarListaEquipos}
+                  className="flex items-center gap-1.5 text-accent text-sm font-medium"
+                >
+                  {copiadoEquipos ? <Check size={16} /> : <Copy size={16} />}
+                  {copiadoEquipos ? "Copiado" : "Copiar como texto"}
+                </button>
+                <button
+                  onClick={descargarImagenEquipos}
+                  className="flex items-center gap-1.5 text-accent text-sm font-medium"
+                >
+                  <ImageDown size={16} />
+                  Descargar imagen (WhatsApp)
+                </button>
+              </div>
             </section>
           )}
 
