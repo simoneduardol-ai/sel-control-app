@@ -90,7 +90,7 @@ export default function EquiposItemEditor({
               <th className="text-left font-medium px-3 py-2.5">Equipo</th>
               <th className="text-left font-medium px-3 py-2.5 w-20">Unidad</th>
               <th className="text-left font-medium px-3 py-2.5 w-24">Cant.</th>
-              <th className="text-left font-medium px-3 py-2.5 w-28">Costo unitario</th>
+              <th className="text-left font-medium px-3 py-2.5 w-28">Precio</th>
               <th className="w-10"></th>
             </tr>
           </thead>
@@ -100,7 +100,7 @@ export default function EquiposItemEditor({
               const sugerencias =
                 filaAbierta === linea.rowId
                   ? (query
-                      ? catalogo.filter((eq) => eq.nombre.toLowerCase().includes(query))
+                      ? catalogo.filter((c) => c.nombre.toLowerCase().includes(query))
                       : catalogo
                     ).slice(0, 30)
                   : [];
@@ -113,11 +113,11 @@ export default function EquiposItemEditor({
                       onFocus={() => setFilaAbierta(linea.rowId)}
                       onChange={(e) => escribirNombre(linea.rowId, e.target.value)}
                       onBlur={() => setTimeout(() => setFilaAbierta(null), 150)}
-                      placeholder="Buscar o escribir equipo..."
+                      placeholder="Descripción del equipo..."
                       className="w-full bg-transparent text-sm focus:outline-none"
                     />
                     {!linea.equipoId && linea.nombre.trim().length >= 2 && (
-                      <span className="text-accent text-xs block">
+                      <span className="text-accent text-[11px]">
                         Nuevo equipo — se creará al guardar
                       </span>
                     )}
@@ -150,7 +150,9 @@ export default function EquiposItemEditor({
                       step="0.01"
                       value={linea.cantidadPorUnidad}
                       onChange={(e) =>
-                        actualizar(linea.rowId, { cantidadPorUnidad: Number(e.target.value) })
+                        actualizar(linea.rowId, {
+                          cantidadPorUnidad: Number(e.target.value),
+                        })
                       }
                       className="w-full bg-transparent text-sm focus:outline-none"
                     />
@@ -177,7 +179,7 @@ export default function EquiposItemEditor({
             {lineas.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-3 py-6 text-center text-text-dim text-sm">
-                  Aún no has agregado equipos a este ítem.
+                  Sin equipos en este ítem (opcional).
                 </td>
               </tr>
             )}
@@ -188,9 +190,9 @@ export default function EquiposItemEditor({
         + Agregar equipo
       </button>
       <p className="text-text-dim text-xs mt-2">
-        Escribe el nombre del equipo: si coincide con uno ya cargado en Equipos, se
-        vincula solo. Si es nuevo, se crea automático al guardar — llena unidad y
-        precio si quieres, no es obligatorio.
+        Puedes elegir un equipo ya cargado (se vincula en vivo a Equipos) o escribir uno
+        nuevo directo aquí — no es obligatorio que exista antes. Si el nombre es nuevo, se
+        crea un equipo maestro con lo que escribas.
       </p>
     </div>
   );
