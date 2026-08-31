@@ -1,11 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Users, Pencil, HardHat } from "lucide-react";
 import { notFound } from "next/navigation";
 import { StatusBadge } from "@/components/StatusBadge";
 import Sidebar from "@/components/Sidebar";
 import EmitirPdfButton from "@/components/EmitirPdfButton";
-import { Users } from "lucide-react";
+import MarcarAprobadaButton from "@/components/MarcarAprobadaButton";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +31,12 @@ export default async function CotizacionDetallePage({
     .eq("cotizacion_id", id)
     .order("orden");
 
+  const { data: obraVinculada } = await supabase
+    .from("obras_ejecucion")
+    .select("id, avance_porcentaje, estado")
+    .eq("cotizacion_id", id)
+    .maybeSingle();
+
   const cliente = cotizacion.clientes as unknown as {
     nombre: string;
     direccion: string | null;
@@ -49,7 +55,13 @@ export default async function CotizacionDetallePage({
         <Link href="/" className="p-1 -ml-1 text-text-dim md:hidden">
           <ArrowLeft size={22} />
         </Link>
-        <h1 className="font-display text-lg">{cliente?.nombre}</h1>
+        <h1 className="font-display text-lg flex-1">{cliente?.nombre}</h1>
+        <Link
+          href={`/cotizacion/${cotizacion.id}/editar`}
+          className="flex items-center gap-1.5 text-accent text-sm font-medium"
+        >
+          <Pencil size={15} /> Editar
+        </Link>
       </header>
 
       <div className="px-5 md:px-8 py-5 max-w-2xl space-y-6">
@@ -60,6 +72,18 @@ export default async function CotizacionDetallePage({
           </span>
         </div>
 
+        {obraVinculada && (
+          <Link
+            href={`/obra/${obraVinculada.id}`}
+            className="flex items-center justify-between bg-ok/10 border border-ok/20 rounded-xl p-4"
+          >
+            <span className="flex items-center gap-2 text-sm font-medium text-ok">
+              <HardHat size={16} /> Obra en ejecución · {obraVinculada.avance_porcentaje}%
+            </span>
+            <span className="text-ok text-sm font-medium">Ver →</span>
+          </Link>
+        )}
+
         <div className="grid grid-cols-2 gap-3">
           <EmitirPdfButton cotizacionId={cotizacion.id} />
           <Link
@@ -69,6 +93,10 @@ export default async function CotizacionDetallePage({
             <Users size={16} /> Proveedores
           </Link>
         </div>
+
+        {cotizacion.estado !== "APROBADA" && (
+          <MarcarAprobadaButton cotizacionId={cotizacion.id} />
+        )}
 
         {(etapas ?? []).map((etapa) => (
           <section key={etapa.id}>
@@ -103,8 +131,10 @@ export default async function CotizacionDetallePage({
 
         {(!etapas || etapas.length === 0) && (
           <p className="text-text-dim text-sm text-center py-12">
-            Sin ítems cargados todavía. La carga de ítems APU y emisión de PDF
-            se habilita en la siguiente fase.
+            Sin ítems cargados todavía.{" "}
+            <Link href={`/cotizacion/${cotizacion.id}/editar`} className="text-accent underline">
+              Editar cotización
+            </Link>
           </p>
         )}
       </div>

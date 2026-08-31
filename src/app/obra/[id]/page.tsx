@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FileText } from "lucide-react";
 import { notFound } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 
@@ -45,13 +45,37 @@ export default async function ObraDetallePage({
       </header>
 
       <div className="px-5 md:px-8 py-5 max-w-2xl space-y-6">
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-text-dim">Avance</span>
-            <span className="font-display text-lg">
-              {obra.avance_porcentaje}%
-            </span>
+        <Link
+          href={`/cotizacion/${obra.cotizacion_id}`}
+          className="flex items-center justify-between bg-surface border border-border rounded-xl p-4"
+        >
+          <span className="flex items-center gap-2 text-sm font-medium">
+            <FileText size={16} /> Ver cotización de esta obra
+          </span>
+          <span className="text-accent text-sm font-medium">Ver →</span>
+        </Link>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-surface border border-border rounded-xl p-4">
+            <p className="text-text-dim text-xs uppercase tracking-wide mb-1">
+              Costo real
+            </p>
+            <p className="font-display text-lg">
+              ${Number(obra.costo_real ?? 0).toLocaleString("es-CL")}
+            </p>
+            <p className="text-text-dim text-[11px] mt-0.5">
+              Se actualiza solo si editas la cotización
+            </p>
           </div>
+          <div className="bg-surface border border-border rounded-xl p-4">
+            <p className="text-text-dim text-xs uppercase tracking-wide mb-1">
+              Avance
+            </p>
+            <p className="font-display text-lg">{obra.avance_porcentaje}%</p>
+          </div>
+        </div>
+
+        <div>
           <div className="h-2.5 bg-surface rounded-full overflow-hidden">
             <div
               className="h-full bg-accent rounded-full transition-all"

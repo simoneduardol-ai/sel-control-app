@@ -10,6 +10,7 @@ import ClienteSelector, { type ClienteOption } from "@/components/ClienteSelecto
 import CatalogoItemSelector, {
   type ItemCotizacionLinea,
 } from "@/components/CatalogoItemSelector";
+import ModalAdvertencia from "@/components/ModalAdvertencia";
 
 type Etapa = {
   rowId: string;
@@ -30,10 +31,15 @@ function totalesLinea(item: ItemCotizacionLinea) {
   };
 }
 
-export default function NuevaCotizacionContent() {
+export default function NuevaCotizacionContent({
+  cotizacionId,
+}: {
+  cotizacionId?: string;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
+  const esEdicion = !!cotizacionId;
 
   const clienteIdPrecargado = searchParams.get("cliente_id");
   const visitaId = searchParams.get("visita_id");
@@ -47,8 +53,14 @@ export default function NuevaCotizacionContent() {
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [cargandoDatos, setCargandoDatos] = useState(esEdicion);
+  const [estadoActual, setEstadoActual] = useState<string | null>(null);
+  const [mostrarAdvertencia, setMostrarAdvertencia] = useState(false);
+  const [edicionBloqueada, setEdicionBloqueada] = useState(false);
+
+  // Precargar cliente cuando viene por link desde una visita
   useEffect(() => {
-    if (!clienteIdPrecargado) return;
+    if (!clienteIdPrecargado || esEdicion) return;
     (async () => {
       const { data } = await supabase
         .from("clientes")
@@ -57,7 +69,110 @@ export default function NuevaCotizacionContent() {
         .single();
       if (data) setCliente(data);
     })();
-  }, [clienteIdPrecargado]);
+  }, [clienteIdPrecargado, esEdicion]);
+
+  // Cargar la cotización completa cuando estamos en modo edición
+  useEffect(() => {
+    if (!cotizacionId) return;
+    (async () => {
+      const { data: cot } = await supabase
+        .from("cotizaciones")
+        .select("*, clientes(id, nombre, direccion)")
+        .eq("id", cotizacionId)
+        .single();
+
+      if (cot) {
+        setCliente(cot.clientes as unknown as ClienteOption);
+        setMostrarPrecioPorItem(cot.mostrar_precio_por_item);
+        setMostrarTotalMateriales(cot.mostrar_total_materiales);
+        setEstadoActual(cot.estado);
+        if (cot.estado === "APROBADA") {
+          setMostrarAdvertencia(true);
+          setEdicionBloqueada(true);
+        }
+      }
+
+      const { data: etapasData } = await supabase
+        .from("cotizacion_etapas")
+        .select(
+          `id, nombre_etapa, orden,
+           cotizacion_items_apu (
+             id, catalogo_item_id, descripcion_item, cantidad, unidad, costo_mano_obra_unitario,
+             cotizacion_item_materiales ( material_id, nombre_libre, unidad_libre, costo_unitario, cantidad_total, materiales_maestros(nombre, unidad) ),
+             cotizacion_item_equipos ( equipo_id, nombre_libre, unidad_libre, costo_unitario, cantidad_total, equipos_maestros(nombre, unidad, marca) )
+           )`
+        )
+        .eq("cotizacion_id", cotizacionId)
+        .order("orden");
+
+      if (etapasData) {
+        const etapasCargadas: Etapa[] = etapasData.map((e) => ({
+          rowId: crypto.randomUUID(),
+          nombre: e.nombre_etapa === "General" ? "" : e.nombre_etapa,
+          items: (e.cotizacion_items_apu ?? []).map((it) => {
+            const cantidadItem = Number(it.cantidad) || 1;
+
+            const materiales = (it.cotizacion_item_materiales ?? []).map((m) => {
+              const maestro = m.materiales_maestros as unknown as {
+                nombre: string;
+                unidad: string;
+              } | null;
+              return {
+                rowId: crypto.randomUUID(),
+                materialId: m.material_id,
+                nombre: maestro?.nombre ?? m.nombre_libre ?? "",
+                unidad: maestro?.unidad ?? m.unidad_libre ?? "un",
+                costoUnitario: Number(m.costo_unitario),
+                cantidadPorUnidad: Number(m.cantidad_total) / cantidadItem,
+                agregarAMaestros: !!m.material_id,
+              };
+            });
+
+            const equipos = (it.cotizacion_item_equipos ?? []).map((eq) => {
+              const maestro = eq.equipos_maestros as unknown as {
+                nombre: string;
+                unidad: string;
+                marca: string | null;
+              } | null;
+              return {
+                rowId: crypto.randomUUID(),
+                equipoId: eq.equipo_id,
+                nombre: maestro
+                  ? maestro.marca
+                    ? `${maestro.nombre} (${maestro.marca})`
+                    : maestro.nombre
+                  : eq.nombre_libre ?? "",
+                unidad: maestro?.unidad ?? eq.unidad_libre ?? "un",
+                costoUnitario: Number(eq.costo_unitario),
+                cantidadPorUnidad: Number(eq.cantidad_total) / cantidadItem,
+                agregarAMaestros: !!eq.equipo_id,
+              };
+            });
+
+            return {
+              rowId: crypto.randomUUID(),
+              catalogoItemId: it.catalogo_item_id,
+              nombre: it.descripcion_item,
+              unidad: it.unidad,
+              cantidad: cantidadItem,
+              costoManoObraUnitario: Number(it.costo_mano_obra_unitario),
+              materiales,
+              equipos,
+              expandido: false,
+              agregarACatalogo: false,
+            };
+          }),
+        }));
+        setEtapas(
+          etapasCargadas.length > 0
+            ? etapasCargadas
+            : [{ rowId: crypto.randomUUID(), nombre: "", items: [] }]
+        );
+      }
+
+      setCargandoDatos(false);
+    })();
+  }, [cotizacionId]);
 
   function actualizarEtapa(rowId: string, patch: Partial<Etapa>) {
     setEtapas((prev) => prev.map((e) => (e.rowId === rowId ? { ...e, ...patch } : e)));
@@ -89,9 +204,7 @@ export default function NuevaCotizacionContent() {
       setError("Selecciona un cliente primero.");
       return;
     }
-    const etapasConItems = etapas.filter(
-      (e) => e.items.some((i) => i.nombre.trim())
-    );
+    const etapasConItems = etapas.filter((e) => e.items.some((i) => i.nombre.trim()));
     if (etapasConItems.length === 0) {
       setError("Agrega al menos una etapa con un ítem.");
       return;
@@ -101,28 +214,51 @@ export default function NuevaCotizacionContent() {
     setError(null);
 
     try {
-      const { data: cotizacion, error: errCot } = await supabase
-        .from("cotizaciones")
-        .insert({
-          cliente_id: cliente.id,
-          visita_id: visitaId || null,
-          estado: "BORRADOR",
-          total_materiales: totalMateriales,
-          total_mano_obra: totalManoObra,
-          total_equipos: totalEquipos,
-          mostrar_precio_por_item: mostrarPrecioPorItem,
-          mostrar_total_materiales: mostrarTotalMateriales,
-        })
-        .select("id")
-        .single();
-      if (errCot) throw errCot;
+      let cotizacionIdFinal: string;
+
+      if (esEdicion && cotizacionId) {
+        const { error: errUpdate } = await supabase
+          .from("cotizaciones")
+          .update({
+            total_materiales: totalMateriales,
+            total_mano_obra: totalManoObra,
+            total_equipos: totalEquipos,
+            mostrar_precio_por_item: mostrarPrecioPorItem,
+            mostrar_total_materiales: mostrarTotalMateriales,
+          })
+          .eq("id", cotizacionId);
+        if (errUpdate) throw errUpdate;
+
+        // Se borran las etapas viejas — la cascada se lleva items, materiales
+        // y equipos con ellas — y se recrean con los datos actuales.
+        await supabase.from("cotizacion_etapas").delete().eq("cotizacion_id", cotizacionId);
+
+        cotizacionIdFinal = cotizacionId;
+      } else {
+        const { data: cotizacion, error: errCot } = await supabase
+          .from("cotizaciones")
+          .insert({
+            cliente_id: cliente.id,
+            visita_id: visitaId || null,
+            estado: "BORRADOR",
+            total_materiales: totalMateriales,
+            total_mano_obra: totalManoObra,
+            total_equipos: totalEquipos,
+            mostrar_precio_por_item: mostrarPrecioPorItem,
+            mostrar_total_materiales: mostrarTotalMateriales,
+          })
+          .select("id")
+          .single();
+        if (errCot) throw errCot;
+        cotizacionIdFinal = cotizacion.id;
+      }
 
       for (let idx = 0; idx < etapasConItems.length; idx++) {
         const etapa = etapasConItems[idx];
         const { data: etapaRow, error: errEtapa } = await supabase
           .from("cotizacion_etapas")
           .insert({
-            cotizacion_id: cotizacion.id,
+            cotizacion_id: cotizacionIdFinal,
             nombre_etapa: etapa.nombre.trim() || "General",
             orden: idx,
           })
@@ -276,7 +412,7 @@ export default function NuevaCotizacionContent() {
         }
       }
 
-      router.push(`/cotizacion/${cotizacion.id}`);
+      router.push(`/cotizacion/${cotizacionIdFinal}`);
       router.refresh();
     } catch {
       setError("No se pudo guardar la cotización. Intenta de nuevo.");
@@ -284,18 +420,45 @@ export default function NuevaCotizacionContent() {
     }
   }
 
+  if (cargandoDatos) {
+    return (
+      <div className="min-h-dvh bg-bg md:flex">
+        <Sidebar />
+        <main className="flex-1 md:pl-64 flex items-center justify-center">
+          <p className="text-text-dim text-sm">Cargando cotización...</p>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-dvh bg-bg md:flex">
       <Sidebar />
       <main className="flex-1 md:pl-64 pb-32">
         <header className="sticky top-0 z-10 bg-bg/95 backdrop-blur border-b border-border px-5 py-4 flex items-center gap-3">
-          <Link href="/cotizacion" className="p-1 -ml-1 text-text-dim">
+          <Link
+            href={esEdicion ? `/cotizacion/${cotizacionId}` : "/cotizacion"}
+            className="p-1 -ml-1 text-text-dim"
+          >
             <ArrowLeft size={22} />
           </Link>
-          <h1 className="font-display text-lg">Nueva cotización</h1>
+          <div>
+            <h1 className="font-display text-lg">
+              {esEdicion ? "Editar cotización" : "Nueva cotización"}
+            </h1>
+            {esEdicion && estadoActual === "APROBADA" && (
+              <p className="text-warn text-xs">
+                Cotización aprobada — vinculada a una obra en ejecución
+              </p>
+            )}
+          </div>
         </header>
 
-        <div className="px-5 md:px-8 py-6 max-w-6xl md:flex md:gap-8 md:items-start">
+        <div
+          className={`px-5 md:px-8 py-6 max-w-6xl md:flex md:gap-8 md:items-start ${
+            edicionBloqueada ? "opacity-40 pointer-events-none select-none" : ""
+          }`}
+        >
           <div className="flex-1 min-w-0 space-y-6">
             <section>
               <h2 className="text-sm font-medium text-text-dim mb-2">Cliente</h2>
@@ -399,15 +562,35 @@ export default function NuevaCotizacionContent() {
         </div>
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-bg/95 backdrop-blur border-t border-border px-5 md:px-8 py-4 safe-bottom">
-        <button
-          onClick={guardar}
-          disabled={guardando}
-          className="w-full max-w-3xl rounded-xl bg-accent text-accent-text font-semibold py-3.5 text-base active:scale-[0.98] transition disabled:opacity-60"
-        >
-          {guardando ? "Guardando..." : "Guardar cotización en borrador"}
-        </button>
-      </div>
+      {!edicionBloqueada && (
+        <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-bg/95 backdrop-blur border-t border-border px-5 md:px-8 py-4 safe-bottom">
+          <button
+            onClick={guardar}
+            disabled={guardando}
+            className="w-full max-w-3xl rounded-xl bg-accent text-accent-text font-semibold py-3.5 text-base active:scale-[0.98] transition disabled:opacity-60"
+          >
+            {guardando
+              ? "Guardando..."
+              : esEdicion
+              ? "Guardar cambios"
+              : "Guardar cotización en borrador"}
+          </button>
+        </div>
+      )}
+
+      {mostrarAdvertencia && (
+        <ModalAdvertencia
+          titulo="Esta cotización ya está aprobada"
+          mensaje='Esta cotización ya está aprobada y vinculada a una obra en ejecución. ¿Desea continuar con la edición? Los cambios se reflejarán en la obra.'
+          textoConfirmar="Sí, continuar editando"
+          textoCancelar="Cancelar"
+          onConfirmar={() => {
+            setMostrarAdvertencia(false);
+            setEdicionBloqueada(false);
+          }}
+          onCancelar={() => router.push(`/cotizacion/${cotizacionId}`)}
+        />
+      )}
     </div>
   );
 }
