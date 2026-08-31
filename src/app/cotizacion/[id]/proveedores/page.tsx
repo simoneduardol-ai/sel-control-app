@@ -48,6 +48,9 @@ export default function ProveedoresPage() {
   const [respuestas, setRespuestas] = useState<
     Record<string, Record<string, { precio: number; disponible: boolean }>>
   >({}); // solicitudId -> materialId -> {precio, disponible}
+  const [respuestasEquipos, setRespuestasEquipos] = useState<
+    Record<string, Record<string, { precio: number; disponible: boolean }>>
+  >({}); // solicitudId -> equipoId -> {precio, disponible}
   const [guardandoRespuesta, setGuardandoRespuesta] = useState<string | null>(null);
   const [aplicando, setAplicando] = useState(false);
 
@@ -193,6 +196,24 @@ export default function ProveedoresPage() {
     }));
   }
 
+  function actualizarRespuestaEquipo(
+    solicitudId: string,
+    equipoId: string,
+    patch: Partial<{ precio: number; disponible: boolean }>
+  ) {
+    setRespuestasEquipos((prev) => ({
+      ...prev,
+      [solicitudId]: {
+        ...prev[solicitudId],
+        [equipoId]: {
+          precio: prev[solicitudId]?.[equipoId]?.precio ?? 0,
+          disponible: prev[solicitudId]?.[equipoId]?.disponible ?? true,
+          ...patch,
+        },
+      },
+    }));
+  }
+
   async function guardarRespuesta(solicitudId: string) {
     setGuardandoRespuesta(solicitudId);
     const datos = respuestas[solicitudId] ?? {};
@@ -202,6 +223,17 @@ export default function ProveedoresPage() {
       await supabase.from("cotizaciones_proveedor_respuesta").insert({
         solicitud_id: solicitudId,
         material_id: materialId,
+        precio_actualizado: r.precio,
+        disponible: r.disponible,
+      });
+    }
+    const datosEquipos = respuestasEquipos[solicitudId] ?? {};
+    for (const equipoId of Object.keys(datosEquipos)) {
+      const r = datosEquipos[equipoId];
+      if (!r.precio) continue;
+      await supabase.from("cotizaciones_proveedor_respuesta_equipos").insert({
+        solicitud_id: solicitudId,
+        equipo_id: equipoId,
         precio_actualizado: r.precio,
         disponible: r.disponible,
       });
@@ -356,6 +388,9 @@ export default function ProveedoresPage() {
 
                     {solicitud && materiales.length > 0 && (
                       <div className="mt-3 space-y-2">
+                        <p className="text-[11px] text-text-dim uppercase tracking-wide">
+                          Materiales
+                        </p>
                         {materiales.map((m) => (
                           <div key={m.material_id ?? m.nombre} className="flex items-center gap-2">
                             <span className="text-xs flex-1 truncate">{m.nombre}</span>
@@ -371,16 +406,42 @@ export default function ProveedoresPage() {
                             />
                           </div>
                         ))}
-                        <button
-                          onClick={() => guardarRespuesta(solicitud.id)}
-                          disabled={guardandoRespuesta === solicitud.id}
-                          className="text-xs font-medium bg-accent text-accent-text rounded-lg px-3 py-1.5 mt-1"
-                        >
-                          {guardandoRespuesta === solicitud.id
-                            ? "Guardando..."
-                            : "Guardar respuesta"}
-                        </button>
                       </div>
+                    )}
+
+                    {solicitud && equipos.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        <p className="text-[11px] text-text-dim uppercase tracking-wide">
+                          Equipos
+                        </p>
+                        {equipos.map((eq) => (
+                          <div key={eq.equipo_id ?? eq.nombre} className="flex items-center gap-2">
+                            <span className="text-xs flex-1 truncate">{eq.nombre}</span>
+                            <input
+                              type="number"
+                              placeholder="Precio"
+                              onChange={(e) =>
+                                actualizarRespuestaEquipo(solicitud.id, eq.equipo_id, {
+                                  precio: Number(e.target.value),
+                                })
+                              }
+                              className="w-24 rounded-lg bg-bg border border-border px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-accent"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {solicitud && (materiales.length > 0 || equipos.length > 0) && (
+                      <button
+                        onClick={() => guardarRespuesta(solicitud.id)}
+                        disabled={guardandoRespuesta === solicitud.id}
+                        className="text-xs font-medium bg-accent text-accent-text rounded-lg px-3 py-1.5 mt-3"
+                      >
+                        {guardandoRespuesta === solicitud.id
+                          ? "Guardando..."
+                          : "Guardar respuesta"}
+                      </button>
                     )}
                   </div>
                 );
