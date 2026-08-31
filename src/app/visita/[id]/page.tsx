@@ -1,10 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, FileText, FileCheck } from "lucide-react";
+import { ArrowLeft, FileText, FileCheck, HardHat, FilePlus2 } from "lucide-react";
 import { notFound } from "next/navigation";
 import CopyPromptButton from "@/components/CopyPromptButton";
 import Sidebar from "@/components/Sidebar";
 import { StatusBadge } from "@/components/StatusBadge";
+import DiagramaUploader from "@/components/DiagramaUploader";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +49,33 @@ export default async function VisitaDetallePage({
   }
 
   const medidas = (visita.medidas ?? {}) as Record<string, string>;
+
+  let diagramaUrl: string | null = null;
+  if (visita.diagrama_url) {
+    const { data } = await supabase.storage
+      .from("visitas-media")
+      .createSignedUrl(visita.diagrama_url, 3600);
+    diagramaUrl = data?.signedUrl ?? null;
+  }
+  const esDiagramaImagen = visita.diagrama_url && !visita.diagrama_url.toLowerCase().endsWith(".pdf");
+
+  const { data: cotizacionRelacionada } = await supabase
+    .from("cotizaciones")
+    .select("id, estado")
+    .eq("visita_id", id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  let obraRelacionada: { id: string; avance_porcentaje: number } | null = null;
+  if (cotizacionRelacionada) {
+    const { data: obra } = await supabase
+      .from("obras_ejecucion")
+      .select("id, avance_porcentaje")
+      .eq("cotizacion_id", cotizacionRelacionada.id)
+      .maybeSingle();
+    obraRelacionada = obra;
+  }
 
   return (
     <div className="min-h-dvh bg-bg md:flex">
@@ -97,6 +125,35 @@ export default async function VisitaDetallePage({
               className="flex items-center justify-center gap-2 rounded-xl bg-accent text-accent-text py-3 text-sm font-medium"
             >
               <FileCheck size={16} /> Informe cliente
+            </Link>
+          )}
+        </section>
+
+        <section>
+          <h2 className="text-sm font-medium text-text-dim mb-2">
+            Cotización de esta visita
+          </h2>
+          {cotizacionRelacionada ? (
+            <Link
+              href={`/cotizacion/${cotizacionRelacionada.id}`}
+              className="flex items-center justify-between bg-surface border border-border rounded-xl p-4"
+            >
+              <div className="flex items-center gap-2">
+                <StatusBadge status={cotizacionRelacionada.estado} />
+                {obraRelacionada && (
+                  <span className="flex items-center gap-1 text-xs text-ok">
+                    <HardHat size={13} /> Obra en curso · {obraRelacionada.avance_porcentaje}%
+                  </span>
+                )}
+              </div>
+              <span className="text-accent text-sm font-medium">Ver →</span>
+            </Link>
+          ) : (
+            <Link
+              href={`/cotizacion/nueva?cliente_id=${visita.cliente_id}&visita_id=${visita.id}`}
+              className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-border py-3 text-sm font-medium text-text-dim"
+            >
+              <FilePlus2 size={16} /> Crear cotización desde esta visita
             </Link>
           )}
         </section>
@@ -239,6 +296,40 @@ export default async function VisitaDetallePage({
               {visita.prompt_diagrama_ia}
             </pre>
             <CopyPromptButton text={visita.prompt_diagrama_ia} />
+
+            <div className="mt-4">
+              <h3 className="text-sm font-medium text-text-dim mb-2">Diagrama</h3>
+              {diagramaUrl ? (
+                <div className="space-y-2">
+                  {esDiagramaImagen ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={diagramaUrl}
+                      alt="Diagrama"
+                      className="w-full rounded-xl border border-border"
+                    />
+                  ) : (
+                    <a
+                      href={diagramaUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block bg-surface border border-border rounded-xl p-4 text-sm text-accent font-medium"
+                    >
+                      Ver diagrama (PDF) ↗
+                    </a>
+                  )}
+                  <DiagramaUploader visitaId={visita.id} />
+                </div>
+              ) : (
+                <div className="bg-surface border border-dashed border-border rounded-xl p-4">
+                  <p className="text-text-dim text-xs mb-2">
+                    Cuando tengas el diagrama listo (hecho con otra IA, o aportado por el
+                    cliente), súbelo aquí.
+                  </p>
+                  <DiagramaUploader visitaId={visita.id} />
+                </div>
+              )}
+            </div>
           </section>
         )}
       </div>
