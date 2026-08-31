@@ -12,7 +12,7 @@ export default async function RentabilidadPage() {
   const { data: obras } = await supabase
     .from("obras_ejecucion")
     .select(
-      `id, estado, avance_porcentaje, monto_cotizado, created_at,
+      `id, estado, avance_porcentaje, monto_cotizado, con_iva, created_at,
        clientes(nombre),
        cotizaciones(numero_cotizacion, total_materiales, total_mano_obra, total_equipos)`
     )
@@ -37,7 +37,10 @@ export default async function RentabilidadPage() {
       total_equipos: number;
     } | null;
 
-    const cotizadoConIva = Number(o.monto_cotizado || 0) * IVA;
+    const cotizadoConIva = Number(o.monto_cotizado || 0) * (o.con_iva ? IVA : 1);
+    // El costo de compra real SIEMPRE lleva IVA, sin importar si la cotización
+    // al cliente lo carga o no — eso es justo lo que hace que la rentabilidad
+    // se vea más ajustada cuando la cotización va "sin IVA".
     const materialesConIva = Number(cot?.total_materiales || 0) * IVA;
     const manoObra = Number(cot?.total_mano_obra || 0);
     const equiposConIva = Number(cot?.total_equipos || 0) * IVA;

@@ -85,6 +85,7 @@ export async function POST(
     totalEquipos: Number(cotizacion.total_equipos) || 0,
     mostrarPrecioPorItem: cotizacion.mostrar_precio_por_item,
     mostrarTotalMateriales: cotizacion.mostrar_total_materiales,
+    conIva: cotizacion.con_iva,
     fecha: new Date().toLocaleDateString("es-CL", { dateStyle: "long" }),
     logoUrl: `${process.env.APP_URL}/logo-dark.jpg`,
   });

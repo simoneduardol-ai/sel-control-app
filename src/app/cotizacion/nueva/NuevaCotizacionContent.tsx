@@ -50,6 +50,7 @@ export default function NuevaCotizacionContent({
   ]);
   const [mostrarPrecioPorItem, setMostrarPrecioPorItem] = useState(false);
   const [mostrarTotalMateriales, setMostrarTotalMateriales] = useState(false);
+  const [conIva, setConIva] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -85,6 +86,7 @@ export default function NuevaCotizacionContent({
         setCliente(cot.clientes as unknown as ClienteOption);
         setMostrarPrecioPorItem(cot.mostrar_precio_por_item);
         setMostrarTotalMateriales(cot.mostrar_total_materiales);
+        setConIva(cot.con_iva);
         setEstadoActual(cot.estado);
         if (cot.estado === "APROBADA") {
           setMostrarAdvertencia(true);
@@ -225,6 +227,7 @@ export default function NuevaCotizacionContent({
             total_equipos: totalEquipos,
             mostrar_precio_por_item: mostrarPrecioPorItem,
             mostrar_total_materiales: mostrarTotalMateriales,
+            con_iva: conIva,
           })
           .eq("id", cotizacionId);
         if (errUpdate) throw errUpdate;
@@ -246,6 +249,7 @@ export default function NuevaCotizacionContent({
             total_equipos: totalEquipos,
             mostrar_precio_por_item: mostrarPrecioPorItem,
             mostrar_total_materiales: mostrarTotalMateriales,
+            con_iva: conIva,
           })
           .select("id")
           .single();
@@ -510,6 +514,20 @@ export default function NuevaCotizacionContent({
 
           <div className="md:w-80 md:shrink-0 md:sticky md:top-20 space-y-6 mt-6 md:mt-0">
             <section className="border border-border rounded-xl bg-surface p-4">
+              <label className="flex items-center gap-2.5 cursor-pointer mb-4 pb-4 border-b border-border">
+                <input
+                  type="checkbox"
+                  checked={conIva}
+                  onChange={(e) => setConIva(e.target.checked)}
+                  className="h-5 w-5 accent-accent"
+                />
+                <span className="text-sm font-medium">
+                  {conIva
+                    ? "Cotización CON IVA (19%)"
+                    : "Cotización SIN IVA — el cliente lo prefiere así"}
+                </span>
+              </label>
+
               <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-3">
                 Resumen (interno)
               </h2>
@@ -522,15 +540,32 @@ export default function NuevaCotizacionContent({
                 <span>${totalMateriales.toLocaleString("es-CL")}</span>
               </div>
               {totalEquipos > 0 && (
-                <div className="flex justify-between text-sm py-1.5 border-b border-border pb-3 mb-3">
+                <div className="flex justify-between text-sm py-1.5">
                   <span className="text-text-dim">Equipos</span>
                   <span>${totalEquipos.toLocaleString("es-CL")}</span>
                 </div>
               )}
-              <div className="flex justify-between font-display text-lg border-t border-border pt-3 mt-1">
-                <span>Total</span>
+              <div className="flex justify-between text-sm py-1.5 border-t border-border pt-3 mt-1">
+                <span className="text-text-dim">Subtotal (neto)</span>
                 <span>${totalGeneral.toLocaleString("es-CL")}</span>
               </div>
+              {conIva ? (
+                <>
+                  <div className="flex justify-between text-sm py-1.5">
+                    <span className="text-text-dim">IVA (19%)</span>
+                    <span>${(totalGeneral * 0.19).toLocaleString("es-CL")}</span>
+                  </div>
+                  <div className="flex justify-between font-display text-lg border-t border-border pt-3 mt-1">
+                    <span>Total con IVA</span>
+                    <span>${(totalGeneral * 1.19).toLocaleString("es-CL")}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-between font-display text-lg border-t border-border pt-3 mt-1">
+                  <span>Total (sin IVA)</span>
+                  <span>${totalGeneral.toLocaleString("es-CL")}</span>
+                </div>
+              )}
             </section>
 
             <section className="border border-border rounded-xl bg-surface p-4">

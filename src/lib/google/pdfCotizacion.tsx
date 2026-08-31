@@ -152,6 +152,7 @@ export async function generarPdfCotizacion({
   totalEquipos = 0,
   mostrarPrecioPorItem,
   mostrarTotalMateriales,
+  conIva,
   fecha,
   logoUrl,
 }: {
@@ -164,11 +165,12 @@ export async function generarPdfCotizacion({
   totalEquipos?: number;
   mostrarPrecioPorItem: boolean;
   mostrarTotalMateriales: boolean;
+  conIva: boolean;
   fecha: string;
   logoUrl: string;
 }): Promise<Buffer> {
   const subtotal = totalMateriales + totalManoObra + totalEquipos;
-  const iva = subtotal * 0.19;
+  const iva = conIva ? subtotal * 0.19 : 0;
   const totalConIva = subtotal + iva;
 
   const fmt = (n: number) => `$${Math.round(n).toLocaleString("es-CL")}`;
@@ -228,16 +230,24 @@ export async function generarPdfCotizacion({
                 <Text style={styles.resumenLabel}>Subtotal</Text>
                 <Text>{fmt(subtotal)}</Text>
               </View>
-              <View style={styles.resumenFila}>
-                <Text style={styles.resumenLabel}>IVA (19%)</Text>
-                <Text>{fmt(iva)}</Text>
-              </View>
+              {conIva && (
+                <View style={styles.resumenFila}>
+                  <Text style={styles.resumenLabel}>IVA (19%)</Text>
+                  <Text>{fmt(iva)}</Text>
+                </View>
+              )}
               <View style={styles.totalFila}>
                 <Text style={styles.totalLabel}>TOTAL</Text>
                 <Text style={styles.totalValor}>{fmt(totalConIva)}</Text>
               </View>
             </View>
           </View>
+
+          {!conIva && (
+            <Text style={{ fontSize: 8, color: TEXT_DIM, marginTop: 6, textAlign: "right" }}>
+              Valores no incluyen IVA, según requerimiento del cliente.
+            </Text>
+          )}
 
           <View style={styles.condiciones}>
             <Text style={styles.condicionesTitulo}>Condiciones</Text>

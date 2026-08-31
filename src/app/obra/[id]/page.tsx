@@ -51,6 +51,8 @@ export default async function ObraDetallePage({
     direccion: string | null;
   } | null;
 
+  const montoCotizadoReal = Number(obra.monto_cotizado ?? 0) * (obra.con_iva ? 1.19 : 1);
+
   return (
     <div className="min-h-dvh bg-bg md:flex">
       <Sidebar />
@@ -76,6 +78,37 @@ export default async function ObraDetallePage({
           </span>
           <span className="text-accent text-sm font-medium">Ver →</span>
         </Link>
+
+        {obra.con_iva ? (
+          <div className="text-sm bg-surface border border-border rounded-xl p-4 flex flex-wrap gap-x-4 gap-y-1">
+            <span className="text-text-dim">
+              Sin IVA:{" "}
+              <span className="text-text font-medium">
+                ${Number(obra.monto_cotizado ?? 0).toLocaleString("es-CL")}
+              </span>
+            </span>
+            <span className="text-text-dim">
+              IVA:{" "}
+              <span className="text-text font-medium">
+                ${Math.round(Number(obra.monto_cotizado ?? 0) * 0.19).toLocaleString("es-CL")}
+              </span>
+            </span>
+            <span className="font-bold">
+              Total con IVA: $
+              {Math.round(Number(obra.monto_cotizado ?? 0) * 1.19).toLocaleString("es-CL")}
+            </span>
+          </div>
+        ) : (
+          <div className="bg-warn/15 border border-warn/30 p-3 rounded-xl flex gap-2 items-center flex-wrap">
+            <span className="bg-warn text-accent-text text-xs px-2 py-1 rounded font-bold">
+              SIN IVA
+            </span>
+            <span className="font-bold text-sm">
+              Monto según cliente (sin IVA): $
+              {Number(obra.monto_cotizado ?? 0).toLocaleString("es-CL")}
+            </span>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-surface border border-border rounded-xl p-4">
@@ -115,7 +148,7 @@ export default async function ObraDetallePage({
 
         <PagosObraSection
           obraId={obra.id}
-          montoCotizado={Number(obra.monto_cotizado) || 0}
+          montoCotizado={montoCotizadoReal}
           obraFinalizada={obra.estado === "FINALIZADA"}
         />
 
