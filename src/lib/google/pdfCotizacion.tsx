@@ -4,6 +4,11 @@ import {
   Text,
   View,
   Image,
+  Svg,
+  Path,
+  Circle,
+  Line,
+  Rect,
   StyleSheet,
   renderToBuffer,
 } from "@react-pdf/renderer";
@@ -38,7 +43,7 @@ const styles = StyleSheet.create({
   cotizacionNumero: { color: GOLD, fontSize: 11, marginTop: 4, fontWeight: 700 },
   cotizacionFecha: { color: "#9aa1b5", fontSize: 9, marginTop: 4 },
 
-  body: { paddingHorizontal: 40, paddingTop: 26, paddingBottom: 50 },
+  body: { paddingHorizontal: 40, paddingTop: 26, paddingBottom: 56 },
 
   clienteBox: {
     backgroundColor: SURFACE,
@@ -95,11 +100,14 @@ const styles = StyleSheet.create({
   totalLabel: { color: "#ffffff", fontSize: 12, fontWeight: 700 },
   totalValor: { color: GOLD, fontSize: 14, fontWeight: 700 },
 
-  condiciones: {
+  condicionesBloque: {
     marginTop: 32,
     borderTopWidth: 1,
     borderTopColor: BORDER,
     paddingTop: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
   },
   condicionesTitulo: {
     fontSize: 9,
@@ -109,12 +117,51 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     letterSpacing: 0.5,
   },
-  condicionesTexto: { fontSize: 9, color: TEXT_DIM, lineHeight: 1.5 },
+  condicionesTexto: { fontSize: 9, color: TEXT_DIM, lineHeight: 1.5, maxWidth: 400 },
+  instagramBox: { alignItems: "center", width: 80 },
+  instagramHandle: { fontSize: 7.5, color: TEXT_DIM, marginTop: 4, textAlign: "center" },
 
-  firmas: { flexDirection: "row", justifyContent: "space-between", marginTop: 50 },
+  puntosBloque: { marginTop: 22 },
+  puntosTitulo: {
+    fontSize: 9,
+    fontWeight: 700,
+    textTransform: "uppercase",
+    color: TEXT_DIM,
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  puntoItem: { marginBottom: 8 },
+  puntoTitulo: { fontSize: 9, fontWeight: 700, marginBottom: 2 },
+  puntoTexto: { fontSize: 8.5, color: TEXT_DIM, lineHeight: 1.5 },
+
+  firmas: { flexDirection: "row", justifyContent: "space-between", marginTop: 40 },
   firmaBox: { width: 200, alignItems: "center" },
   firmaLinea: { borderTopWidth: 1, borderTopColor: TEXT, width: "100%", marginBottom: 6 },
   firmaTexto: { fontSize: 9, color: TEXT_DIM },
+
+  bannerCertificado: {
+    backgroundColor: NAVY,
+    marginTop: 36,
+    marginHorizontal: -40,
+    paddingVertical: 8,
+    alignItems: "center",
+  },
+  bannerCertificadoTexto: {
+    color: GOLD,
+    fontSize: 8.5,
+    fontWeight: 700,
+    letterSpacing: 1,
+  },
+
+  serviciosFila: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 14,
+    marginHorizontal: -6,
+  },
+  servicioBox: { alignItems: "center", width: 78 },
+  servicioTitulo: { fontSize: 7.5, fontWeight: 700, marginTop: 4, textAlign: "center" },
+  servicioSub: { fontSize: 6.5, color: TEXT_DIM, marginTop: 1, textAlign: "center" },
 
   footer: {
     position: "absolute",
@@ -129,6 +176,101 @@ const styles = StyleSheet.create({
   },
   footerTexto: { fontSize: 8, color: TEXT_DIM },
 });
+
+// Íconos simples, minimalistas, dibujados a mano (sin depender de fuentes de
+// íconos externas, que no siempre renderizan bien en PDF).
+function IconoCirculo({ children }: { children: React.ReactNode }) {
+  return (
+    <Svg width={30} height={30} viewBox="0 0 30 30">
+      <Circle cx={15} cy={15} r={14} stroke={GOLD} strokeWidth={1.4} fill="#ffffff" />
+      {children}
+    </Svg>
+  );
+}
+
+const ICONOS: Record<string, React.ReactNode> = {
+  parcelas: (
+    <IconoCirculo>
+      <Path d="M15 8 L22 14 V22 H8 V14 Z" stroke={NAVY} strokeWidth={1.3} fill="none" />
+      <Line x1={12.5} y1={22} x2={12.5} y2={17} stroke={NAVY} strokeWidth={1.3} />
+      <Line x1={17.5} y1={22} x2={17.5} y2={17} stroke={NAVY} strokeWidth={1.3} />
+    </IconoCirculo>
+  ),
+  respaldo: (
+    <IconoCirculo>
+      <Path d="M16.5 8 L11 17 H15 L13.5 22 L20 13 H16 Z" fill={NAVY} />
+    </IconoCirculo>
+  ),
+  mediciones: (
+    <IconoCirculo>
+      <Path
+        d="M8.5 18 A6.5 6.5 0 0 1 21.5 18"
+        stroke={NAVY}
+        strokeWidth={1.3}
+        fill="none"
+      />
+      <Line x1={15} y1={18} x2={18.5} y2={13.5} stroke={NAVY} strokeWidth={1.3} />
+      <Circle cx={15} cy={18} r={1.1} fill={NAVY} />
+    </IconoCirculo>
+  ),
+  instalaciones: (
+    <IconoCirculo>
+      <Rect x={10} y={12} width={10} height={8} stroke={NAVY} strokeWidth={1.3} fill="none" />
+      <Line x1={12.5} y1={12} x2={12.5} y2={9} stroke={NAVY} strokeWidth={1.3} />
+      <Line x1={17.5} y1={12} x2={17.5} y2={9} stroke={NAVY} strokeWidth={1.3} />
+    </IconoCirculo>
+  ),
+  certificacion: (
+    <IconoCirculo>
+      <Circle cx={15} cy={15} r={6} stroke={NAVY} strokeWidth={1.3} fill="none" />
+      <Path d="M12 15 L14.2 17.2 L18.5 12.5" stroke={NAVY} strokeWidth={1.3} fill="none" />
+    </IconoCirculo>
+  ),
+  seguridad: (
+    <IconoCirculo>
+      <Rect x={9} y={12.5} width={12} height={8} rx={1.5} stroke={NAVY} strokeWidth={1.3} fill="none" />
+      <Circle cx={15} cy={16.5} r={2.6} stroke={NAVY} strokeWidth={1.2} fill="none" />
+      <Rect x={12.5} y={10} width={5} height={2.5} stroke={NAVY} strokeWidth={1.2} fill="none" />
+    </IconoCirculo>
+  ),
+};
+
+function IconoInstagram() {
+  return (
+    <Svg width={26} height={26} viewBox="0 0 30 30">
+      <Rect x={4} y={4} width={22} height={22} rx={6} stroke={GOLD} strokeWidth={1.6} fill="none" />
+      <Circle cx={15} cy={15} r={5.5} stroke={GOLD} strokeWidth={1.6} fill="none" />
+      <Circle cx={21.5} cy={8.5} r={1.3} fill={GOLD} />
+    </Svg>
+  );
+}
+
+const SERVICIOS = [
+  { key: "parcelas", titulo: "Parcelas", sub: "Empalme + Instalación" },
+  { key: "respaldo", titulo: "Respaldo", sub: "Generador + ATS" },
+  { key: "mediciones", titulo: "Mediciones", sub: "Instrumentos Uni-T" },
+  { key: "instalaciones", titulo: "Instalaciones", sub: "Residenciales y comerciales" },
+  { key: "certificacion", titulo: "Certificación", sub: "Trámites ante la SEC" },
+  { key: "seguridad", titulo: "Seguridad", sub: "CCTV y automatización" },
+];
+
+const PUNTOS_A_CONSIDERAR = [
+  {
+    titulo: "Alcance de la garantía",
+    texto:
+      "La mano de obra tiene 12 meses de garantía técnica por fallas de montaje o conexión, mientras que los materiales se rigen por la garantía de sus fabricantes en Chile.",
+  },
+  {
+    titulo: "Modificaciones por terceros",
+    texto:
+      "La garantía se invalida de forma inmediata si la instalación eléctrica es intervenida o modificada por personal no autorizado o sin licencia SEC.",
+  },
+  {
+    titulo: "Trabajos en exterior y clima",
+    texto:
+      "Los plazos de faenas al aire libre dependen de las condiciones climáticas. Días de temporal suspenden los trabajos por seguridad y se reprogramarán de mutuo acuerdo.",
+  },
+];
 
 type ItemPdf = {
   descripcion: string;
@@ -207,7 +349,10 @@ export async function generarPdfCotizacion({
             <View key={idx}>
               <Text style={styles.etapaTitulo}>{etapa.nombre}</Text>
               {etapa.items.map((item, i) => (
-                <View key={i} style={styles.itemFila}>
+                // wrap=false: si no cabe entera en lo que queda de página,
+                // la fila completa (con su línea divisoria) salta a la
+                // siguiente, en vez de partirse a la mitad.
+                <View key={i} style={styles.itemFila} wrap={false}>
                   <Text style={styles.itemDescripcion}>
                     {item.descripcion} — {item.cantidad} {item.unidad}
                   </Text>
@@ -219,7 +364,7 @@ export async function generarPdfCotizacion({
             </View>
           ))}
 
-          <View style={styles.resumen}>
+          <View style={styles.resumen} wrap={false}>
             <View style={styles.resumenTabla}>
               {mostrarTotalMateriales && (
                 <View style={styles.resumenFila}>
@@ -250,16 +395,32 @@ export async function generarPdfCotizacion({
             </Text>
           )}
 
-          <View style={styles.condiciones}>
-            <Text style={styles.condicionesTitulo}>Condiciones</Text>
-            <Text style={styles.condicionesTexto}>
-              Validez de esta cotización: 15 días desde la fecha de emisión.{"\n"}
-              Forma de pago: a convenir con el cliente.{"\n"}
-              Los valores no incluyen imprevistos no contemplados en este detalle.
-            </Text>
+          <View style={styles.condicionesBloque} wrap={false}>
+            <View>
+              <Text style={styles.condicionesTitulo}>Condiciones</Text>
+              <Text style={styles.condicionesTexto}>
+                Validez de esta cotización: 10 días desde la fecha de emisión.{"\n"}
+                Forma de pago: a convenir con el cliente.{"\n"}
+                Los valores no incluyen imprevistos no contemplados en este detalle.
+              </Text>
+            </View>
+            <View style={styles.instagramBox}>
+              <IconoInstagram />
+              <Text style={styles.instagramHandle}>@SELCLOFICIAL</Text>
+            </View>
           </View>
 
-          <View style={styles.firmas}>
+          <View style={styles.puntosBloque} wrap={false}>
+            <Text style={styles.puntosTitulo}>Puntos a considerar</Text>
+            {PUNTOS_A_CONSIDERAR.map((p, i) => (
+              <View key={i} style={styles.puntoItem}>
+                <Text style={styles.puntoTitulo}>{p.titulo}</Text>
+                <Text style={styles.puntoTexto}>{p.texto}</Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.firmas} wrap={false}>
             <View style={styles.firmaBox}>
               <View style={styles.firmaLinea} />
               <Text style={styles.firmaTexto}>{EMPRESA.nombre}</Text>
@@ -268,6 +429,22 @@ export async function generarPdfCotizacion({
               <View style={styles.firmaLinea} />
               <Text style={styles.firmaTexto}>Cliente</Text>
             </View>
+          </View>
+
+          <View style={styles.bannerCertificado} wrap={false}>
+            <Text style={styles.bannerCertificadoTexto}>
+              ELECTRICISTA CERTIFICADO · PUERTO VARAS · LLANQUIHUE · FRUTILLAR
+            </Text>
+          </View>
+
+          <View style={styles.serviciosFila} wrap={false}>
+            {SERVICIOS.map((s) => (
+              <View key={s.key} style={styles.servicioBox}>
+                {ICONOS[s.key]}
+                <Text style={styles.servicioTitulo}>{s.titulo}</Text>
+                <Text style={styles.servicioSub}>{s.sub}</Text>
+              </View>
+            ))}
           </View>
         </View>
 
