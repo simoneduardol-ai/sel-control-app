@@ -134,14 +134,9 @@ const styles = StyleSheet.create({
   puntoTitulo: { fontSize: 9, fontWeight: 700, marginBottom: 2 },
   puntoTexto: { fontSize: 8.5, color: TEXT_DIM, lineHeight: 1.5 },
 
-  firmas: { flexDirection: "row", justifyContent: "space-between", marginTop: 40 },
-  firmaBox: { width: 200, alignItems: "center" },
-  firmaLinea: { borderTopWidth: 1, borderTopColor: TEXT, width: "100%", marginBottom: 6 },
-  firmaTexto: { fontSize: 9, color: TEXT_DIM },
-
   bannerCertificado: {
     backgroundColor: NAVY,
-    marginTop: 36,
+    marginTop: 28,
     marginHorizontal: -40,
     paddingVertical: 8,
     alignItems: "center",
@@ -418,17 +413,6 @@ export async function generarPdfCotizacion({
                 <Text style={styles.puntoTexto}>{p.texto}</Text>
               </View>
             ))}
-          </View>
-
-          <View style={styles.firmas} wrap={false}>
-            <View style={styles.firmaBox}>
-              <View style={styles.firmaLinea} />
-              <Text style={styles.firmaTexto}>{EMPRESA.nombre}</Text>
-            </View>
-            <View style={styles.firmaBox}>
-              <View style={styles.firmaLinea} />
-              <Text style={styles.firmaTexto}>Cliente</Text>
-            </View>
           </View>
 
           <View style={styles.bannerCertificado} wrap={false}>
