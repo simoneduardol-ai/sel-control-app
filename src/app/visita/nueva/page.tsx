@@ -34,6 +34,12 @@ export default function NuevaVisitaPage() {
   const supabase = createClient();
 
   const [cliente, setCliente] = useState<ClienteOption | null>(null);
+  const [fechaVisita, setFechaVisita] = useState(() => {
+    const ahora = new Date();
+    ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
+    return ahora.toISOString().slice(0, 16);
+  });
+  const [personaEnTerreno, setPersonaEnTerreno] = useState("");
   const [fotos, setFotos] = useState<File[]>([]);
   const [fotosPreview, setFotosPreview] = useState<string[]>([]);
   const [grabando, setGrabando] = useState(false);
@@ -180,6 +186,8 @@ export default function NuevaVisitaPage() {
           costo_equipos: costoEquipos,
           km_recorridos: kmRecorridos,
           notas_cliente: notasCliente || null,
+          fecha: new Date(fechaVisita).toISOString(),
+          persona_en_terreno: personaEnTerreno.trim() || null,
           total_estimado: totalEstimado,
           requiere_informe_cliente: requiereInforme,
           carpeta_fotos_drive_url: carpetaDriveUrl || null,
@@ -219,6 +227,28 @@ export default function NuevaVisitaPage() {
         <section>
           <h2 className="text-sm font-medium text-text-dim mb-2">Cliente</h2>
           <ClienteSelector value={cliente} onChange={setCliente} />
+        </section>
+
+        {/* Fecha, hora y persona en terreno */}
+        <section className="grid grid-cols-2 gap-3">
+          <div>
+            <h2 className="text-sm font-medium text-text-dim mb-2">Fecha y hora</h2>
+            <input
+              type="datetime-local"
+              value={fechaVisita}
+              onChange={(e) => setFechaVisita(e.target.value)}
+              className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+          </div>
+          <div>
+            <h2 className="text-sm font-medium text-text-dim mb-2">Persona en terreno</h2>
+            <input
+              value={personaEnTerreno}
+              onChange={(e) => setPersonaEnTerreno(e.target.value)}
+              placeholder="Si no es el cliente..."
+              className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+          </div>
         </section>
 
         {/* Fotos */}

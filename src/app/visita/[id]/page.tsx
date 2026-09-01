@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, FileText, FileCheck, HardHat, FilePlus2 } from "lucide-react";
+import { ArrowLeft, FileText, FileCheck, HardHat, FilePlus2, Pencil, History } from "lucide-react";
 import { notFound } from "next/navigation";
 import CopyPromptButton from "@/components/CopyPromptButton";
 import Sidebar from "@/components/Sidebar";
@@ -77,6 +77,12 @@ export default async function VisitaDetallePage({
     obraRelacionada = obra;
   }
 
+  const { data: historialVersiones } = await supabase
+    .from("visitas_historial")
+    .select("id, etiqueta_version, drive_url, created_at")
+    .eq("visita_id", id)
+    .order("created_at", { ascending: false });
+
   return (
     <div className="min-h-dvh bg-bg md:flex">
       <Sidebar />
@@ -85,13 +91,31 @@ export default async function VisitaDetallePage({
         <Link href="/" className="p-1 -ml-1 text-text-dim md:hidden">
           <ArrowLeft size={22} />
         </Link>
-        <h1 className="font-display text-lg">{cliente?.nombre}</h1>
+        <h1 className="font-display text-lg flex-1">{cliente?.nombre}</h1>
+        <Link
+          href={`/visita/${visita.id}/editar`}
+          className="flex items-center gap-1.5 text-accent text-sm font-medium"
+        >
+          <Pencil size={15} /> Editar
+        </Link>
       </header>
 
       <div className="px-5 md:px-8 py-5 max-w-2xl space-y-8">
         {cliente?.direccion && (
           <p className="text-text-dim text-sm">{cliente.direccion}</p>
         )}
+
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-text-dim text-xs">
+          <span>
+            {new Date(visita.fecha).toLocaleString("es-CL", {
+              dateStyle: "long",
+              timeStyle: "short",
+            })}
+          </span>
+          {visita.persona_en_terreno && (
+            <span>Atendió: {visita.persona_en_terreno}</span>
+          )}
+        </div>
 
         <div className="flex flex-wrap items-center gap-2">
           {visita.tipo_trabajo && (
@@ -330,6 +354,45 @@ export default async function VisitaDetallePage({
                 </div>
               )}
             </div>
+          </section>
+        )}
+
+        {historialVersiones && historialVersiones.length > 0 && (
+          <section>
+            <h2 className="text-sm font-medium text-text-dim mb-2 flex items-center gap-1.5">
+              <History size={14} /> Historial de versiones
+            </h2>
+            <div className="border border-border rounded-xl bg-surface divide-y divide-border">
+              {historialVersiones.map((v) => (
+                <div key={v.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
+                  <span className="capitalize">{v.etiqueta_version}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-text-dim text-xs">
+                      {new Date(v.created_at).toLocaleDateString("es-CL", {
+                        day: "2-digit",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                    {v.drive_url && (
+                      <a
+                        href={v.drive_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-accent text-xs font-medium"
+                      >
+                        Ver ↗
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-text-dim text-xs mt-2">
+              Esta pantalla siempre muestra la versión más reciente. Los respaldos
+              anteriores quedan archivados en Drive.
+            </p>
           </section>
         )}
       </div>

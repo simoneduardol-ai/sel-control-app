@@ -76,9 +76,56 @@ async function buscarOCrearCarpeta(
 }
 
 /**
- * Sube un PDF a Drive dentro de una carpeta raíz / carpeta de cliente,
- * creando la estructura de carpetas si no existe. Devuelve el link al archivo.
+ * Sube un archivo a Drive dentro de una carpeta raíz / carpeta de cliente
+ * (y opcionalmente una subcarpeta más, ej. "Versiones"), creando la
+ * estructura si no existe. Devuelve el link al archivo.
  */
+export async function subirArchivoACarpetaCliente({
+  refreshToken,
+  carpetaRaiz = CARPETA_RAIZ_NOMBRE,
+  nombreCliente,
+  subcarpeta,
+  nombreArchivo,
+  contenido,
+  mimeType,
+}: {
+  refreshToken: string;
+  carpetaRaiz?: string;
+  nombreCliente: string;
+  subcarpeta?: string;
+  nombreArchivo: string;
+  contenido: Buffer | string;
+  mimeType: string;
+}) {
+  const drive = getDriveClient(refreshToken);
+
+  const raizId = await buscarOCrearCarpeta(drive, carpetaRaiz);
+  let carpetaDestinoId = await buscarOCrearCarpeta(drive, nombreCliente, raizId);
+  if (subcarpeta) {
+    carpetaDestinoId = await buscarOCrearCarpeta(drive, subcarpeta, carpetaDestinoId);
+  }
+
+  const { Readable } = await import("stream");
+  const buffer = typeof contenido === "string" ? Buffer.from(contenido, "utf-8") : contenido;
+  const res = await drive.files.create({
+    requestBody: {
+      name: nombreArchivo,
+      parents: [carpetaDestinoId],
+    },
+    media: {
+      mimeType,
+      body: Readable.from(buffer),
+    },
+    fields: "id, webViewLink",
+  });
+
+  return {
+    fileId: res.data.id,
+    url: res.data.webViewLink ?? `https://drive.google.com/file/d/${res.data.id}/view`,
+  };
+}
+
+/** Compatibilidad: PDFs siguen usando esta función específica */
 export async function subirPdfACarpetaCliente({
   refreshToken,
   carpetaRaiz = CARPETA_RAIZ_NOMBRE,
@@ -92,26 +139,12 @@ export async function subirPdfACarpetaCliente({
   nombreArchivo: string;
   pdfBuffer: Buffer;
 }) {
-  const drive = getDriveClient(refreshToken);
-
-  const raizId = await buscarOCrearCarpeta(drive, carpetaRaiz);
-  const clienteId = await buscarOCrearCarpeta(drive, nombreCliente, raizId);
-
-  const { Readable } = await import("stream");
-  const res = await drive.files.create({
-    requestBody: {
-      name: nombreArchivo,
-      parents: [clienteId],
-    },
-    media: {
-      mimeType: "application/pdf",
-      body: Readable.from(pdfBuffer),
-    },
-    fields: "id, webViewLink",
+  return subirArchivoACarpetaCliente({
+    refreshToken,
+    carpetaRaiz,
+    nombreCliente,
+    nombreArchivo,
+    contenido: pdfBuffer,
+    mimeType: "application/pdf",
   });
-
-  return {
-    fileId: res.data.id,
-    url: res.data.webViewLink ?? `https://drive.google.com/file/d/${res.data.id}/view`,
-  };
 }
