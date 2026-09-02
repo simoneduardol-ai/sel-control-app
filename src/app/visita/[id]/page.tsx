@@ -6,6 +6,7 @@ import CopyPromptButton from "@/components/CopyPromptButton";
 import Sidebar from "@/components/Sidebar";
 import { StatusBadge } from "@/components/StatusBadge";
 import DiagramaUploader from "@/components/DiagramaUploader";
+import CerrarVisitaButton from "@/components/CerrarVisitaButton";
 
 export const dynamic = "force-dynamic";
 
@@ -126,6 +127,11 @@ export default async function VisitaDetallePage({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {visita.estado === "cerrada" && (
+            <span className="text-xs font-medium bg-ok/15 text-ok rounded-full px-3 py-1">
+              Cerrada
+            </span>
+          )}
           {visita.tipo_trabajo && (
             <span className="text-xs font-medium bg-surface border border-border rounded-full px-3 py-1">
               {visita.tipo_trabajo}
@@ -143,6 +149,8 @@ export default async function VisitaDetallePage({
             </span>
           ))}
         </div>
+
+        <CerrarVisitaButton visitaId={visita.id} estadoActual={visita.estado} />
 
         <section className="grid grid-cols-2 gap-3">
           <Link

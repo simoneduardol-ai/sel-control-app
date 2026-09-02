@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import Sidebar from "@/components/Sidebar";
 import DataTable, { type TableRow } from "@/components/DataTable";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, AlertTriangle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -10,8 +10,24 @@ export default async function CotizacionesPage() {
   const supabase = await createClient();
   const { data: cotizaciones } = await supabase
     .from("cotizaciones")
-    .select("id, estado, total_materiales, total_mano_obra, total_equipos, created_at, clientes(nombre)")
+    .select("id, estado, total_materiales, total_mano_obra, total_equipos, created_at, visita_id, clientes(nombre)")
     .order("created_at", { ascending: false });
+
+  // Visitas cerradas que quedaron marcadas "todavía tengo que cotizar esto"
+  // y aún no tienen ninguna cotización asociada — recordatorio, sin link.
+  const { data: visitasPendientesCotizar } = await supabase
+    .from("visitas_terreno")
+    .select("id, fecha, clientes(nombre)")
+    .eq("estado", "cerrada")
+    .eq("requiere_cotizacion", true)
+    .order("fecha", { ascending: true });
+
+  const visitaIdsConCotizacion = new Set(
+    (cotizaciones ?? []).map((c) => c.visita_id).filter(Boolean)
+  );
+  const pendientesCotizar = (visitasPendientesCotizar ?? []).filter(
+    (v) => !visitaIdsConCotizacion.has(v.id)
+  );
 
   const rows: TableRow[] = (cotizaciones ?? []).map((c) => ({
     id: c.id,
@@ -42,6 +58,36 @@ export default async function CotizacionesPage() {
         <p className="text-text-dim text-sm mb-6">
           {rows.length} cotizaciones en total
         </p>
+
+        {pendientesCotizar.length > 0 && (
+          <div className="mb-6 border border-warn/30 bg-warn/10 rounded-xl p-4">
+            <h2 className="flex items-center gap-1.5 text-sm font-medium text-warn mb-2">
+              <AlertTriangle size={15} /> Pendientes por cotizar
+            </h2>
+            <p className="text-text-dim text-xs mb-3">
+              Visitas cerradas donde quedó anotado que faltaba armar la cotización.
+            </p>
+            <div className="space-y-1.5">
+              {pendientesCotizar.map((v) => {
+                const cliente = v.clientes as unknown as { nombre: string } | null;
+                return (
+                  <div key={v.id} className="flex items-center justify-between text-sm">
+                    <span className="font-medium">{cliente?.nombre ?? "Sin nombre"}</span>
+                    <span className="text-text-dim text-xs">
+                      Visita del{" "}
+                      {new Date(v.fecha).toLocaleDateString("es-CL", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <DataTable
           rows={rows}
           columnaDetalle="Total"
