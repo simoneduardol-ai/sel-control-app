@@ -83,6 +83,14 @@ export default async function VisitaDetallePage({
     .eq("visita_id", id)
     .order("created_at", { ascending: false });
 
+  const { data: inspeccionRelacionada } = await supabase
+    .from("inspecciones_electricas")
+    .select("id, numero_ot, estado_visita")
+    .eq("visita_id", id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   return (
     <div className="min-h-dvh bg-bg md:flex">
       <Sidebar />
@@ -178,6 +186,31 @@ export default async function VisitaDetallePage({
               className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-border py-3 text-sm font-medium text-text-dim"
             >
               <FilePlus2 size={16} /> Crear cotización desde esta visita
+            </Link>
+          )}
+        </section>
+
+        <section>
+          <h2 className="text-sm font-medium text-text-dim mb-2">
+            Inspección eléctrica de esta visita
+          </h2>
+          {inspeccionRelacionada ? (
+            <Link
+              href={`/inspeccion/${inspeccionRelacionada.id}`}
+              className="flex items-center justify-between bg-surface border border-border rounded-xl p-4"
+            >
+              <span className="text-sm">
+                {inspeccionRelacionada.numero_ot ?? "Sin número"}
+                {inspeccionRelacionada.estado_visita && ` · ${inspeccionRelacionada.estado_visita}`}
+              </span>
+              <span className="text-accent text-sm font-medium">Ver →</span>
+            </Link>
+          ) : (
+            <Link
+              href={`/inspeccion/nueva?cliente_id=${visita.cliente_id}&visita_id=${visita.id}`}
+              className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-border py-3 text-sm font-medium text-text-dim"
+            >
+              <FilePlus2 size={16} /> Crear inspección eléctrica desde esta visita
             </Link>
           )}
         </section>
