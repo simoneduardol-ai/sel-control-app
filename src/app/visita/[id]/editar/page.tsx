@@ -28,6 +28,8 @@ export default function EditarVisitaPage() {
   const [clienteNombre, setClienteNombre] = useState("");
   const [fechaVisita, setFechaVisita] = useState("");
   const [personaEnTerreno, setPersonaEnTerreno] = useState("");
+  const [horaInicio, setHoraInicio] = useState("");
+  const [horaFin, setHoraFin] = useState("");
   const [tipoTrabajo, setTipoTrabajo] = useState("");
   const [etiquetasSeleccionadas, setEtiquetasSeleccionadas] = useState<string[]>([]);
   const [estadoSeguimiento, setEstadoSeguimiento] = useState("En progreso");
@@ -55,6 +57,8 @@ export default function EditarVisitaPage() {
         setFechaVisita(fecha.toISOString().slice(0, 16));
 
         setPersonaEnTerreno(data.persona_en_terreno ?? "");
+        setHoraInicio(data.hora_inicio?.slice(0, 5) ?? "");
+        setHoraFin(data.hora_fin?.slice(0, 5) ?? "");
         setTipoTrabajo(data.tipo_trabajo ?? "");
         setEtiquetasSeleccionadas(data.etiquetas ?? []);
         setEstadoSeguimiento(data.estado_seguimiento ?? "En progreso");
@@ -76,6 +80,8 @@ export default function EditarVisitaPage() {
         body: JSON.stringify({
           fecha: new Date(fechaVisita).toISOString(),
           persona_en_terreno: personaEnTerreno.trim() || null,
+          hora_inicio: horaInicio || null,
+          hora_fin: horaFin || null,
           tipo_trabajo: tipoTrabajo || null,
           etiquetas: etiquetasSeleccionadas,
           estado_seguimiento: estadoSeguimiento || null,
@@ -144,6 +150,40 @@ export default function EditarVisitaPage() {
               />
             </div>
           </section>
+
+          <section className="grid grid-cols-2 gap-3">
+            <div>
+              <h2 className="text-sm font-medium text-text-dim mb-2">Hora inicio</h2>
+              <input
+                type="time"
+                value={horaInicio}
+                onChange={(e) => setHoraInicio(e.target.value)}
+                className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+            </div>
+            <div>
+              <h2 className="text-sm font-medium text-text-dim mb-2">Hora fin</h2>
+              <input
+                type="time"
+                value={horaFin}
+                onChange={(e) => setHoraFin(e.target.value)}
+                className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+            </div>
+          </section>
+          {horaInicio && horaFin && (() => {
+            const [h1, m1] = horaInicio.split(":").map(Number);
+            const [h2, m2] = horaFin.split(":").map(Number);
+            const mins = h2 * 60 + m2 - (h1 * 60 + m1);
+            if (mins <= 0) return null;
+            const h = Math.floor(mins / 60);
+            const m = mins % 60;
+            return (
+              <p className="text-text-dim text-xs -mt-4">
+                Duración: {h > 0 ? `${h}h ${m}min` : `${m}min`}
+              </p>
+            );
+          })()}
 
           <section>
             <h2 className="text-sm font-medium text-text-dim mb-2">Detalles de la visita</h2>

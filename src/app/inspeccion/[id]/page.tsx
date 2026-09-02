@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil, History } from "lucide-react";
 import { notFound } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import EmitirPdfInspeccionButton from "@/components/EmitirPdfInspeccionButton";
@@ -34,6 +34,12 @@ export default async function InspeccionDetallePage({
     .select("*")
     .eq("inspeccion_id", id)
     .order("orden");
+
+  const { data: historialVersiones } = await supabase
+    .from("inspecciones_historial")
+    .select("id, etiqueta_version, drive_url, created_at")
+    .eq("inspeccion_id", id)
+    .order("created_at", { ascending: false });
 
   const cliente = inspeccion.clientes as unknown as {
     nombre: string;
@@ -129,6 +135,40 @@ export default async function InspeccionDetallePage({
                   </div>
                 ))}
               </div>
+            </section>
+          )}
+
+          {historialVersiones && historialVersiones.length > 0 && (
+            <section>
+              <h2 className="text-sm font-medium text-text-dim mb-2 flex items-center gap-1.5">
+                <History size={14} /> Historial de versiones
+              </h2>
+              <div className="border border-border rounded-xl bg-surface divide-y divide-border">
+                {historialVersiones.map((v) => (
+                  <div key={v.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
+                    <span className="capitalize">{v.etiqueta_version}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-text-dim text-xs">
+                        {new Date(v.created_at).toLocaleDateString("es-CL", {
+                          day: "2-digit",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                      {v.drive_url && (
+                        <a href={v.drive_url} target="_blank" rel="noreferrer" className="text-accent text-xs font-medium">
+                          Ver ↗
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-text-dim text-xs mt-2">
+                Esta pantalla siempre muestra la versión más reciente. Los respaldos
+                anteriores quedan archivados en Drive.
+              </p>
             </section>
           )}
         </div>

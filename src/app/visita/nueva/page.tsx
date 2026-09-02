@@ -40,6 +40,8 @@ export default function NuevaVisitaPage() {
     return ahora.toISOString().slice(0, 16);
   });
   const [personaEnTerreno, setPersonaEnTerreno] = useState("");
+  const [horaInicio, setHoraInicio] = useState("");
+  const [horaFin, setHoraFin] = useState("");
   const [fotos, setFotos] = useState<File[]>([]);
   const [fotosPreview, setFotosPreview] = useState<string[]>([]);
   const [grabando, setGrabando] = useState(false);
@@ -188,6 +190,8 @@ export default function NuevaVisitaPage() {
           notas_cliente: notasCliente || null,
           fecha: new Date(fechaVisita).toISOString(),
           persona_en_terreno: personaEnTerreno.trim() || null,
+          hora_inicio: horaInicio || null,
+          hora_fin: horaFin || null,
           total_estimado: totalEstimado,
           requiere_informe_cliente: requiereInforme,
           carpeta_fotos_drive_url: carpetaDriveUrl || null,
@@ -250,6 +254,40 @@ export default function NuevaVisitaPage() {
             />
           </div>
         </section>
+
+        <section className="grid grid-cols-2 gap-3">
+          <div>
+            <h2 className="text-sm font-medium text-text-dim mb-2">Hora inicio</h2>
+            <input
+              type="time"
+              value={horaInicio}
+              onChange={(e) => setHoraInicio(e.target.value)}
+              className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+          </div>
+          <div>
+            <h2 className="text-sm font-medium text-text-dim mb-2">Hora fin</h2>
+            <input
+              type="time"
+              value={horaFin}
+              onChange={(e) => setHoraFin(e.target.value)}
+              className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+          </div>
+        </section>
+        {horaInicio && horaFin && (() => {
+          const [h1, m1] = horaInicio.split(":").map(Number);
+          const [h2, m2] = horaFin.split(":").map(Number);
+          const mins = h2 * 60 + m2 - (h1 * 60 + m1);
+          if (mins <= 0) return null;
+          const h = Math.floor(mins / 60);
+          const m = mins % 60;
+          return (
+            <p className="text-text-dim text-xs -mt-4">
+              Duración: {h > 0 ? `${h}h ${m}min` : `${m}min`}
+            </p>
+          );
+        })()}
 
         {/* Fotos */}
         <section>

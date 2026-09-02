@@ -385,18 +385,50 @@ export default function InspeccionForm({ inspeccionId }: { inspeccionId?: string
       fotos_urls: fotos,
     };
 
+    const filasDiferenciales = diferenciales
+      .filter((d) => d.circuito || d.marca_modelo || d.rcd_x1_0_ms)
+      .map((d) => ({
+        circuito: d.circuito || null,
+        marca_modelo: d.marca_modelo || null,
+        corriente_nominal: d.corriente_nominal || null,
+        sensibilidad: d.sensibilidad || null,
+        rcd_x1_0_ms: d.rcd_x1_0_ms ? Number(d.rcd_x1_0_ms) : null,
+        rcd_x1_180_ms: d.rcd_x1_180_ms ? Number(d.rcd_x1_180_ms) : null,
+        rcd_x5_0_ms: d.rcd_x5_0_ms ? Number(d.rcd_x5_0_ms) : null,
+        corriente_fuga_ma: d.corriente_fuga_ma ? Number(d.corriente_fuga_ma) : null,
+        estado: d.estado || null,
+      }));
+
+    const filasAislaciones = aislaciones
+      .filter((a) => a.circuito || a.a_fase_tierra_mohm)
+      .map((a) => ({
+        circuito: a.circuito || null,
+        tension_prueba: a.tension_prueba || null,
+        a_fase_tierra_mohm: a.a_fase_tierra_mohm ? Number(a.a_fase_tierra_mohm) : null,
+        a_neutro_tierra_mohm: a.a_neutro_tierra_mohm ? Number(a.a_neutro_tierra_mohm) : null,
+        a_fase_neutro_mohm: a.a_fase_neutro_mohm ? Number(a.a_fase_neutro_mohm) : null,
+        b_fase_tierra_mohm: a.b_fase_tierra_mohm ? Number(a.b_fase_tierra_mohm) : null,
+        b_neutro_tierra_mohm: a.b_neutro_tierra_mohm ? Number(a.b_neutro_tierra_mohm) : null,
+        b_fase_neutro_mohm: a.b_fase_neutro_mohm ? Number(a.b_fase_neutro_mohm) : null,
+        resultado_final: a.resultado_final || null,
+      }));
+
     try {
       let idFinal = inspeccionId;
 
       if (esEdicion && inspeccionId) {
-        const { error: errUpd } = await supabase
-          .from("inspecciones_electricas")
-          .update(payload)
-          .eq("id", inspeccionId);
-        if (errUpd) throw errUpd;
-
-        await supabase.from("inspeccion_diferenciales").delete().eq("inspeccion_id", inspeccionId);
-        await supabase.from("inspeccion_aislaciones").delete().eq("inspeccion_id", inspeccionId);
+        // Edición: pasa por la API, que respalda la versión anterior en
+        // Drive (JSON) antes de aplicar el cambio — igual que en visitas.
+        const res = await fetch(`/api/inspecciones/${inspeccionId}/editar`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            principal: payload,
+            diferenciales: filasDiferenciales,
+            aislaciones: filasAislaciones,
+          }),
+        });
+        if (!res.ok) throw new Error();
       } else {
         const { data: nueva, error: errIns } = await supabase
           .from("inspecciones_electricas")
@@ -405,50 +437,17 @@ export default function InspeccionForm({ inspeccionId }: { inspeccionId?: string
           .single();
         if (errIns) throw errIns;
         idFinal = nueva.id;
-      }
 
-      if (diferenciales.length > 0) {
-        await supabase.from("inspeccion_diferenciales").insert(
-          diferenciales
-            .filter((d) => d.circuito || d.marca_modelo || d.rcd_x1_0_ms)
-            .map((d, i) => ({
-              inspeccion_id: idFinal,
-              circuito: d.circuito || null,
-              marca_modelo: d.marca_modelo || null,
-              corriente_nominal: d.corriente_nominal || null,
-              sensibilidad: d.sensibilidad || null,
-              rcd_x1_0_ms: d.rcd_x1_0_ms ? Number(d.rcd_x1_0_ms) : null,
-              rcd_x1_180_ms: d.rcd_x1_180_ms ? Number(d.rcd_x1_180_ms) : null,
-              rcd_x5_0_ms: d.rcd_x5_0_ms ? Number(d.rcd_x5_0_ms) : null,
-              corriente_fuga_ma: d.corriente_fuga_ma ? Number(d.corriente_fuga_ma) : null,
-              estado: d.estado || null,
-              orden: i,
-            }))
-        );
-      }
-
-      if (aislaciones.length > 0) {
-        await supabase.from("inspeccion_aislaciones").insert(
-          aislaciones
-            .filter((a) => a.circuito || a.a_fase_tierra_mohm)
-            .map((a, i) => ({
-              inspeccion_id: idFinal,
-              circuito: a.circuito || null,
-              tension_prueba: a.tension_prueba || null,
-              a_fase_tierra_mohm: a.a_fase_tierra_mohm ? Number(a.a_fase_tierra_mohm) : null,
-              a_neutro_tierra_mohm: a.a_neutro_tierra_mohm
-                ? Number(a.a_neutro_tierra_mohm)
-                : null,
-              a_fase_neutro_mohm: a.a_fase_neutro_mohm ? Number(a.a_fase_neutro_mohm) : null,
-              b_fase_tierra_mohm: a.b_fase_tierra_mohm ? Number(a.b_fase_tierra_mohm) : null,
-              b_neutro_tierra_mohm: a.b_neutro_tierra_mohm
-                ? Number(a.b_neutro_tierra_mohm)
-                : null,
-              b_fase_neutro_mohm: a.b_fase_neutro_mohm ? Number(a.b_fase_neutro_mohm) : null,
-              resultado_final: a.resultado_final || null,
-              orden: i,
-            }))
-        );
+        if (filasDiferenciales.length > 0) {
+          await supabase.from("inspeccion_diferenciales").insert(
+            filasDiferenciales.map((d, i) => ({ ...d, inspeccion_id: idFinal, orden: i }))
+          );
+        }
+        if (filasAislaciones.length > 0) {
+          await supabase.from("inspeccion_aislaciones").insert(
+            filasAislaciones.map((a, i) => ({ ...a, inspeccion_id: idFinal, orden: i }))
+          );
+        }
       }
 
       router.push(`/inspeccion/${idFinal}`);
@@ -488,7 +487,9 @@ export default function InspeccionForm({ inspeccionId }: { inspeccionId?: string
 
         <div className="px-5 md:px-8 py-6 max-w-3xl space-y-8">
           <p className="text-text-dim text-xs bg-surface border border-border rounded-xl p-3">
-            Ningún campo es obligatorio — completa solo lo que corresponda al caso.
+            {esEdicion
+              ? "Antes de guardar, se archiva automático una copia de cómo estaba esta inspección antes del cambio (en Drive, dentro de la carpeta del cliente → Inspecciones → Versiones)."
+              : "Ningún campo es obligatorio — completa solo lo que corresponda al caso."}
           </p>
 
           {/* 1. Datos del cliente */}
