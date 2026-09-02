@@ -91,5 +91,16 @@ export async function POST(
     return NextResponse.json({ error: errUpdate.message }, { status: 500 });
   }
 
+  // Re-archiva el/los PDF con los datos ya actualizados, para que Drive
+  // siempre tenga la versión vigente, no la de antes de este cambio.
+  try {
+    await fetch(`${process.env.APP_URL}/api/visitas/${id}/archivar`, {
+      method: "POST",
+      headers: { cookie: request.headers.get("cookie") ?? "" },
+    });
+  } catch {
+    // si falla el re-archivado, el cambio ya quedó guardado igual
+  }
+
   return NextResponse.json({ ok: true, driveUrl });
 }

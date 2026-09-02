@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { generarPdfRespaldoInterno } from "@/lib/google/pdf";
-import { subirPdfACarpetaCliente } from "@/lib/google/drive";
+import { generarPdfRespaldoInterno, generarPdfInformeCliente } from "@/lib/google/pdf";
+import { subirPdfACarpetaCliente, subirArchivoACarpetaCliente } from "@/lib/google/drive";
 
 export async function POST(
   request: NextRequest,
@@ -83,7 +83,46 @@ export async function POST(
       .update({ pdf_drive_url: url })
       .eq("id", id);
 
-    return NextResponse.json({ archivado: true, url });
+    // Si esta visita requiere informe para el cliente, generamos y
+    // archivamos también esa versión (sin costos ni notas privadas).
+    let urlInforme: string | null = null;
+    if (visita.requiere_informe_cliente) {
+      const fotoUrlsFirmadas: string[] = [];
+      for (const path of (visita.fotos ?? []).slice(0, 6)) {
+        const { data } = await supabase.storage
+          .from("visitas-media")
+          .createSignedUrl(path, 600);
+        if (data?.signedUrl) fotoUrlsFirmadas.push(data.signedUrl);
+      }
+
+      const pdfInforme = await generarPdfInformeCliente({
+        cliente: cliente?.nombre ?? "Cliente sin nombre",
+        direccion: cliente?.direccion,
+        tipoTrabajo: visita.tipo_trabajo,
+        fecha: fecha.toLocaleDateString("es-CL", { dateStyle: "long" }),
+        hallazgos: visita.notas_voz_transcripcion,
+        fotosUrls: fotoUrlsFirmadas,
+        totalEstimado: visita.total_estimado,
+        logoUrl: `${process.env.APP_URL}/logo-dark.jpg`,
+      });
+
+      const { url: urlInf } = await subirArchivoACarpetaCliente({
+        refreshToken: integracion.refresh_token,
+        nombreCliente: cliente?.nombre ?? "Sin nombre",
+        subcarpeta: "Informes cliente",
+        nombreArchivo: `Informe - ${nombreArchivo}`,
+        contenido: pdfInforme,
+        mimeType: "application/pdf",
+      });
+      urlInforme = urlInf;
+
+      await supabase
+        .from("visitas_terreno")
+        .update({ pdf_informe_drive_url: urlInforme })
+        .eq("id", id);
+    }
+
+    return NextResponse.json({ archivado: true, url, urlInforme });
   } catch (err) {
     return NextResponse.json(
       { archivado: false, motivo: "error_drive", detalle: String(err) },

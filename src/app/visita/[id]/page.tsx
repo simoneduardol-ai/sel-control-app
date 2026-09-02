@@ -248,19 +248,38 @@ export default async function VisitaDetallePage({
           </section>
         )}
 
-        {visita.pdf_drive_url && (
-          <section>
-            <h2 className="text-sm font-medium text-text-dim mb-2">
-              Respaldo archivado en Drive
-            </h2>
-            <a
-              href={visita.pdf_drive_url}
-              target="_blank"
-              rel="noreferrer"
-              className="block bg-ok/10 border border-ok/20 rounded-xl p-4 text-sm text-ok font-medium truncate"
-            >
-              Ver PDF en Drive ↗
-            </a>
+        {(visita.pdf_drive_url || visita.pdf_informe_drive_url) && (
+          <section className="grid grid-cols-2 gap-3">
+            {visita.pdf_drive_url && (
+              <div>
+                <h2 className="text-sm font-medium text-text-dim mb-2">
+                  Respaldo interno
+                </h2>
+                <a
+                  href={visita.pdf_drive_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block bg-ok/10 border border-ok/20 rounded-xl p-4 text-sm text-ok font-medium truncate"
+                >
+                  Ver en Drive ↗
+                </a>
+              </div>
+            )}
+            {visita.pdf_informe_drive_url && (
+              <div>
+                <h2 className="text-sm font-medium text-text-dim mb-2">
+                  Informe cliente
+                </h2>
+                <a
+                  href={visita.pdf_informe_drive_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block bg-ok/10 border border-ok/20 rounded-xl p-4 text-sm text-ok font-medium truncate"
+                >
+                  Ver en Drive ↗
+                </a>
+              </div>
+            )}
           </section>
         )}
 
