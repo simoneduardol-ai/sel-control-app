@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { subirArchivoACarpetaCliente } from "@/lib/google/drive";
+import { archivarVisitaEnDrive } from "@/lib/google/archivarVisita";
 
 function slug(texto: string) {
   return texto
@@ -93,11 +94,10 @@ export async function POST(
 
   // Re-archiva el/los PDF con los datos ya actualizados, para que Drive
   // siempre tenga la versión vigente, no la de antes de este cambio.
+  // Se llama directo (no por fetch a sí misma) — más rápido y no puede
+  // fallar en silencio por un problema de red.
   try {
-    await fetch(`${process.env.APP_URL}/api/visitas/${id}/archivar`, {
-      method: "POST",
-      headers: { cookie: request.headers.get("cookie") ?? "" },
-    });
+    await archivarVisitaEnDrive(supabase, id, user.id);
   } catch {
     // si falla el re-archivado, el cambio ya quedó guardado igual
   }
