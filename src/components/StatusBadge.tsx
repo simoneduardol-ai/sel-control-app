@@ -3,6 +3,7 @@ const STATUS_STYLES: Record<string, string> = {
   pendiente: "bg-warn/15 text-warn",
   diagrama: "bg-info/15 text-info",
   cotizando: "bg-accent/15 text-accent",
+  cerrada: "bg-ok/15 text-ok",
   // cotizaciones
   BORRADOR: "bg-text-dim/15 text-text-dim",
   EN_PROVEEDORES: "bg-info/15 text-info",
@@ -24,6 +25,7 @@ const STATUS_LABELS: Record<string, string> = {
   pendiente: "Pendiente",
   diagrama: "Diagrama",
   cotizando: "Cotizando",
+  cerrada: "Cerrada",
   BORRADOR: "Borrador",
   EN_PROVEEDORES: "En proveedores",
   ENVIADA: "Enviada",
