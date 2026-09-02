@@ -69,7 +69,7 @@ export async function POST(
   const pdfBuffer = await generarPdfInspeccion({
     numeroOt,
     cliente: nombreCliente,
-    logoUrl: `${process.env.APP_URL}/logo-dark.jpg`,
+    logoUrl: `${process.env.APP_URL}/logo-light.png`,
     fecha: inspeccion.fecha_visita
       ? new Date(inspeccion.fecha_visita + "T00:00:00").toLocaleDateString("es-CL", {
           dateStyle: "long",

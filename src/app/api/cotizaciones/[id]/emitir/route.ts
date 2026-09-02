@@ -93,7 +93,7 @@ export async function POST(
     mostrarTotalMateriales: cotizacion.mostrar_total_materiales,
     conIva: cotizacion.con_iva,
     fecha: new Date().toLocaleDateString("es-CL", { dateStyle: "long" }),
-    logoUrl: `${process.env.APP_URL}/logo-dark.jpg`,
+    logoUrl: `${process.env.APP_URL}/logo-light.png`,
   });
 
   let driveUrl: string | null = null;
