@@ -105,9 +105,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: BORDER,
     paddingTop: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
   },
   condicionesTitulo: {
     fontSize: 9,
@@ -117,9 +114,22 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     letterSpacing: 0.5,
   },
-  condicionesTexto: { fontSize: 9, color: TEXT_DIM, lineHeight: 1.5, maxWidth: 400 },
-  instagramBox: { alignItems: "center", width: 80 },
-  instagramHandle: { fontSize: 7.5, color: TEXT_DIM, marginTop: 4, textAlign: "center" },
+  condicionesTexto: { fontSize: 9, color: TEXT_DIM, lineHeight: 1.5 },
+
+  formasPago: {
+    marginTop: 16,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  formasPagoLabel: { fontSize: 8.5, fontWeight: 700, color: TEXT, marginRight: 4 },
+  formaPagoItem: { flexDirection: "row", alignItems: "center", gap: 5 },
+  formaPagoTexto: { fontSize: 8.5, color: TEXT },
+  formasPagoDivisor: { fontSize: 8.5, color: BORDER, marginHorizontal: 2 },
 
   puntosBloque: { marginTop: 22 },
   puntosTitulo: {
@@ -230,12 +240,25 @@ const ICONOS: Record<string, React.ReactNode> = {
   ),
 };
 
-function IconoInstagram() {
+function IconoBanco() {
   return (
-    <Svg width={26} height={26} viewBox="0 0 30 30">
-      <Rect x={4} y={4} width={22} height={22} rx={6} stroke={GOLD} strokeWidth={1.6} fill="none" />
-      <Circle cx={15} cy={15} r={5.5} stroke={GOLD} strokeWidth={1.6} fill="none" />
-      <Circle cx={21.5} cy={8.5} r={1.3} fill={GOLD} />
+    <Svg width={13} height={13} viewBox="0 0 24 24">
+      <Path d="M2 9 L12 3 L22 9 Z" stroke={NAVY} strokeWidth={1.6} fill="none" />
+      <Line x1={4} y1={9} x2={4} y2={19} stroke={NAVY} strokeWidth={1.6} />
+      <Line x1={9} y1={9} x2={9} y2={19} stroke={NAVY} strokeWidth={1.6} />
+      <Line x1={15} y1={9} x2={15} y2={19} stroke={NAVY} strokeWidth={1.6} />
+      <Line x1={20} y1={9} x2={20} y2={19} stroke={NAVY} strokeWidth={1.6} />
+      <Line x1={2} y1={21} x2={22} y2={21} stroke={NAVY} strokeWidth={1.6} />
+    </Svg>
+  );
+}
+
+function IconoTarjeta() {
+  return (
+    <Svg width={15} height={13} viewBox="0 0 24 20">
+      <Rect x={1} y={1} width={22} height={18} rx={2.5} stroke={NAVY} strokeWidth={1.6} fill="none" />
+      <Line x1={1} y1={7} x2={23} y2={7} stroke={NAVY} strokeWidth={1.6} />
+      <Line x1={4} y1={14} x2={10} y2={14} stroke={NAVY} strokeWidth={1.6} />
     </Svg>
   );
 }
@@ -391,17 +414,24 @@ export async function generarPdfCotizacion({
           )}
 
           <View style={styles.condicionesBloque} wrap={false}>
-            <View>
-              <Text style={styles.condicionesTitulo}>Condiciones</Text>
-              <Text style={styles.condicionesTexto}>
-                Validez de esta cotización: 10 días desde la fecha de emisión.{"\n"}
-                Forma de pago: a convenir con el cliente.{"\n"}
-                Los valores no incluyen imprevistos no contemplados en este detalle.
-              </Text>
-            </View>
-            <View style={styles.instagramBox}>
-              <IconoInstagram />
-              <Text style={styles.instagramHandle}>@SELCLOFICIAL</Text>
+            <Text style={styles.condicionesTitulo}>Condiciones</Text>
+            <Text style={styles.condicionesTexto}>
+              Validez de esta cotización: 10 días desde la fecha de emisión.{"\n"}
+              Forma de pago: a convenir con el cliente.{"\n"}
+              Los valores no incluyen imprevistos no contemplados en este detalle.
+            </Text>
+
+            <View style={styles.formasPago}>
+              <Text style={styles.formasPagoLabel}>Formas de pago:</Text>
+              <View style={styles.formaPagoItem}>
+                <IconoBanco />
+                <Text style={styles.formaPagoTexto}>Transferencia bancaria</Text>
+              </View>
+              <Text style={styles.formasPagoDivisor}>|</Text>
+              <View style={styles.formaPagoItem}>
+                <IconoTarjeta />
+                <Text style={styles.formaPagoTexto}>Tarjeta de crédito</Text>
+              </View>
             </View>
           </View>
 
