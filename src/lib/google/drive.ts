@@ -42,10 +42,15 @@ async function buscarCarpeta(
 
   const res = await drive.files.list({
     q,
-    fields: "files(id, name)",
+    fields: "files(id, name, createdTime)",
+    orderBy: "createdTime",
     spaces: "drive",
   });
 
+  // Si por algún motivo llegara a existir más de una carpeta con el mismo
+  // nombre (ej. de antes de este arreglo), siempre se usa la más antigua —
+  // así todo converge a un solo lugar de forma consistente, en vez de
+  // "elegir" una al azar cada vez.
   return res.data.files?.[0]?.id ?? null;
 }
 
