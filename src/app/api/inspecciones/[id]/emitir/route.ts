@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generarPdfInspeccion } from "@/lib/google/pdfInspeccion";
 import { subirArchivoACarpetaCliente } from "@/lib/google/drive";
+import { logoComoDataUri } from "@/lib/google/logo";
 
 export async function POST(
   request: NextRequest,
@@ -69,7 +70,7 @@ export async function POST(
   const pdfBuffer = await generarPdfInspeccion({
     numeroOt,
     cliente: nombreCliente,
-    logoUrl: `${process.env.APP_URL}/logo-light.png`,
+    logoUrl: logoComoDataUri("logo-light.png"),
     fecha: inspeccion.fecha_visita
       ? new Date(inspeccion.fecha_visita + "T00:00:00").toLocaleDateString("es-CL", {
           dateStyle: "long",

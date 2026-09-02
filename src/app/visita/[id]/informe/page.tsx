@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import PrintButton from "@/components/PrintButton";
-import Image from "next/image";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +44,8 @@ export default async function InformeClientePage({
       <div className="max-w-2xl mx-auto px-8 py-10 print:px-0 print:py-0">
         <div className="flex items-center gap-3 mb-8 border-b border-gray-200 pb-6">
           <div className="h-12 w-12 rounded-full overflow-hidden shrink-0">
-            <Image
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src="/logo-dark.jpg"
               alt="SEL"
               width={48}

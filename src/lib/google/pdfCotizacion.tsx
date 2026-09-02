@@ -105,6 +105,9 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: BORDER,
     paddingTop: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
   },
   condicionesTitulo: {
     fontSize: 9,
@@ -114,22 +117,19 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     letterSpacing: 0.5,
   },
-  condicionesTexto: { fontSize: 9, color: TEXT_DIM, lineHeight: 1.5 },
+  condicionesTexto: { fontSize: 9, color: TEXT_DIM, lineHeight: 1.5, maxWidth: 300 },
 
   formasPago: {
-    marginTop: 16,
     backgroundColor: "#f9f9f9",
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+    width: 190,
   },
-  formasPagoLabel: { fontSize: 8.5, fontWeight: 700, color: TEXT, marginRight: 4 },
-  formaPagoItem: { flexDirection: "row", alignItems: "center", gap: 5 },
-  formaPagoTexto: { fontSize: 8.5, color: TEXT },
-  formasPagoDivisor: { fontSize: 8.5, color: BORDER, marginHorizontal: 2 },
+  formasPagoLabel: { fontSize: 8.5, fontWeight: 700, color: TEXT, marginBottom: 6 },
+  formasPagoFila: { flexDirection: "row", alignItems: "center", gap: 12 },
+  formaPagoItem: { flexDirection: "row", alignItems: "center", gap: 4 },
+  formaPagoTexto: { fontSize: 8, color: TEXT },
 
   puntosBloque: { marginTop: 22 },
   puntosTitulo: {
@@ -414,23 +414,26 @@ export async function generarPdfCotizacion({
           )}
 
           <View style={styles.condicionesBloque} wrap={false}>
-            <Text style={styles.condicionesTitulo}>Condiciones</Text>
-            <Text style={styles.condicionesTexto}>
-              Validez de esta cotización: 10 días desde la fecha de emisión.{"\n"}
-              Forma de pago: a convenir con el cliente.{"\n"}
-              Los valores no incluyen imprevistos no contemplados en este detalle.
-            </Text>
+            <View>
+              <Text style={styles.condicionesTitulo}>Condiciones</Text>
+              <Text style={styles.condicionesTexto}>
+                Validez de esta cotización: 10 días desde la fecha de emisión.{"\n"}
+                Forma de pago: a convenir con el cliente.{"\n"}
+                Los valores no incluyen imprevistos no contemplados en este detalle.
+              </Text>
+            </View>
 
             <View style={styles.formasPago}>
-              <Text style={styles.formasPagoLabel}>Formas de pago:</Text>
-              <View style={styles.formaPagoItem}>
-                <IconoBanco />
-                <Text style={styles.formaPagoTexto}>Transferencia bancaria</Text>
-              </View>
-              <Text style={styles.formasPagoDivisor}>|</Text>
-              <View style={styles.formaPagoItem}>
-                <IconoTarjeta />
-                <Text style={styles.formaPagoTexto}>Tarjeta de crédito</Text>
+              <Text style={styles.formasPagoLabel}>Formas de pago</Text>
+              <View style={styles.formasPagoFila}>
+                <View style={styles.formaPagoItem}>
+                  <IconoBanco />
+                  <Text style={styles.formaPagoTexto}>Transferencia</Text>
+                </View>
+                <View style={styles.formaPagoItem}>
+                  <IconoTarjeta />
+                  <Text style={styles.formaPagoTexto}>Tarjeta</Text>
+                </View>
               </View>
             </View>
           </View>

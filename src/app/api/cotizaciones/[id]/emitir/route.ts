@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generarPdfCotizacion } from "@/lib/google/pdfCotizacion";
 import { subirPdfACarpetaCliente } from "@/lib/google/drive";
+import { logoComoDataUri } from "@/lib/google/logo";
 
 export async function POST(
   request: NextRequest,
@@ -93,7 +94,7 @@ export async function POST(
     mostrarTotalMateriales: cotizacion.mostrar_total_materiales,
     conIva: cotizacion.con_iva,
     fecha: new Date().toLocaleDateString("es-CL", { dateStyle: "long" }),
-    logoUrl: `${process.env.APP_URL}/logo-light.png`,
+    logoUrl: logoComoDataUri("logo-light.png"),
   });
 
   let driveUrl: string | null = null;

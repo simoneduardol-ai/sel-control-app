@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generarPdfRespaldoInterno, generarPdfInformeCliente } from "@/lib/google/pdf";
 import { subirPdfACarpetaCliente, subirArchivoACarpetaCliente } from "@/lib/google/drive";
+import { logoComoDataUri } from "@/lib/google/logo";
 
 export async function POST(
   request: NextRequest,
@@ -103,7 +104,7 @@ export async function POST(
         hallazgos: visita.notas_voz_transcripcion,
         fotosUrls: fotoUrlsFirmadas,
         totalEstimado: visita.total_estimado,
-        logoUrl: `${process.env.APP_URL}/logo-dark.jpg`,
+        logoUrl: logoComoDataUri("logo-dark.jpg"),
       });
 
       const { url: urlInf } = await subirArchivoACarpetaCliente({

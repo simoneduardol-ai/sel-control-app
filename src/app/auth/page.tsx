@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 
 export default function AuthPage() {
@@ -35,7 +34,8 @@ export default function AuthPage() {
       <div className="w-full max-w-sm">
         <div className="mb-10 text-center">
           <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl overflow-hidden mb-4">
-            <Image
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src="/logo-dark.jpg"
               alt="SEL"
               width={64}
