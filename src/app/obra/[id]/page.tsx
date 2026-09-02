@@ -65,7 +65,7 @@ export default async function ObraDetallePage({
         <StatusBadge status={obra.estado} />
       </header>
 
-      <div className="px-5 md:px-8 py-5 max-w-2xl space-y-6">
+      <div className="px-5 md:px-8 py-6 max-w-2xl space-y-6">
         <Link
           href={`/cotizacion/${obra.cotizacion_id}`}
           className="flex items-center justify-between bg-surface border border-border rounded-xl p-4"
@@ -153,7 +153,7 @@ export default async function ObraDetallePage({
         />
 
         <section>
-          <h2 className="text-sm font-medium text-text-dim mb-3">Bitácora</h2>
+          <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-3">Bitácora</h2>
           {(bitacora ?? []).length === 0 ? (
             <p className="text-text-dim text-sm text-center py-8">
               Sin visitas registradas todavía. El botón de &ldquo;agregar

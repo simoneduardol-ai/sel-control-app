@@ -70,7 +70,7 @@ export default async function InspeccionDetallePage({
           </Link>
         </header>
 
-        <div className="px-5 md:px-8 py-5 max-w-2xl space-y-6">
+        <div className="px-5 md:px-8 py-6 max-w-2xl space-y-6">
           {inspeccion.estado_visita && (
             <span className="inline-block text-xs font-medium bg-surface border border-border rounded-full px-3 py-1">
               {inspeccion.estado_visita}
@@ -90,7 +90,7 @@ export default async function InspeccionDetallePage({
 
           {(inspeccion.sintomas ?? []).length > 0 && (
             <section>
-              <h2 className="text-sm font-medium text-text-dim mb-2">Síntomas</h2>
+              <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">Síntomas</h2>
               <div className="flex flex-wrap gap-1.5">
                 {inspeccion.sintomas.map((s: string, i: number) => (
                   <span key={i} className="text-xs bg-surface border border-border rounded-full px-2.5 py-1">
@@ -103,7 +103,7 @@ export default async function InspeccionDetallePage({
 
           {inspeccion.diagnostico_detallado && (
             <section>
-              <h2 className="text-sm font-medium text-text-dim mb-2">Diagnóstico</h2>
+              <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">Diagnóstico</h2>
               <p className="text-sm bg-surface border border-border rounded-xl p-4">
                 {inspeccion.diagnostico_detallado}
               </p>
@@ -112,7 +112,7 @@ export default async function InspeccionDetallePage({
 
           {diferenciales && diferenciales.length > 0 && (
             <section>
-              <h2 className="text-sm font-medium text-text-dim mb-2">Diferenciales medidos</h2>
+              <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">Diferenciales medidos</h2>
               <div className="border border-border rounded-xl bg-surface divide-y divide-border">
                 {diferenciales.map((d) => (
                   <div key={d.id} className="px-4 py-2.5 text-sm">
@@ -126,7 +126,7 @@ export default async function InspeccionDetallePage({
 
           {aislaciones && aislaciones.length > 0 && (
             <section>
-              <h2 className="text-sm font-medium text-text-dim mb-2">Aislación medida</h2>
+              <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">Aislación medida</h2>
               <div className="border border-border rounded-xl bg-surface divide-y divide-border">
                 {aislaciones.map((a) => (
                   <div key={a.id} className="px-4 py-2.5 text-sm">
@@ -140,7 +140,7 @@ export default async function InspeccionDetallePage({
 
           {historialVersiones && historialVersiones.length > 0 && (
             <section>
-              <h2 className="text-sm font-medium text-text-dim mb-2 flex items-center gap-1.5">
+              <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2 flex items-center gap-1.5">
                 <History size={14} /> Historial de versiones
               </h2>
               <div className="border border-border rounded-xl bg-surface divide-y divide-border">

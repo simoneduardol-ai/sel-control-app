@@ -19,6 +19,11 @@ const STATUS_STYLES: Record<string, string> = {
   "En progreso": "bg-info/15 text-info",
   "Requiere seguimiento": "bg-warn/15 text-warn",
   Completado: "bg-ok/15 text-ok",
+  // inspecciones eléctricas
+  "Terminada OK": "bg-ok/15 text-ok",
+  "Pendiente Etapa 2": "bg-warn/15 text-warn",
+  "Requiere cotización": "bg-info/15 text-info",
+  "No se pudo resolver": "bg-danger/15 text-danger",
 };
 
 const STATUS_LABELS: Record<string, string> = {

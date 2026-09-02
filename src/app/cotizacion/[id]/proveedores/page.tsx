@@ -213,11 +213,11 @@ export default function ProveedoresPage() {
           <h1 className="font-display text-lg">Proveedores</h1>
         </header>
 
-        <div className="px-5 md:px-8 py-6 max-w-2xl space-y-8">
+        <div className="px-5 md:px-8 py-6 max-w-2xl space-y-6">
           {/* Lista de materiales */}
           <section>
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-sm font-medium text-text-dim">Lista de materiales</h2>
+              <h2 className="font-display text-sm uppercase tracking-wide text-text-dim">Lista de materiales</h2>
               <button onClick={generarLista} disabled={generando} className="text-accent text-sm font-medium">
                 {generando ? "Generando..." : "Generar / actualizar"}
               </button>
@@ -252,7 +252,7 @@ export default function ProveedoresPage() {
           {/* Lista de equipos */}
           {equipos.length > 0 && (
             <section>
-              <h2 className="text-sm font-medium text-text-dim mb-2">Lista de equipos</h2>
+              <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">Lista de equipos</h2>
               <div className="border border-border rounded-xl overflow-hidden bg-surface divide-y divide-border">
                 {equipos.map((e) => (
                   <div key={e.equipo_id} className="flex justify-between px-4 py-2.5 text-sm">
@@ -275,7 +275,7 @@ export default function ProveedoresPage() {
 
           {/* Códigos de proveedor */}
           <section>
-            <h2 className="text-sm font-medium text-text-dim mb-2">Códigos de proveedor</h2>
+            <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">Códigos de proveedor</h2>
             <p className="text-text-dim text-xs mb-2">
               Úsalos junto al precio de cada material/equipo. &quot;SL&quot; = lo pones tú
               mismo, sin proveedor externo.
@@ -314,7 +314,7 @@ export default function ProveedoresPage() {
           {/* Precios definitivos: materiales */}
           {materiales.length > 0 && (
             <section>
-              <h2 className="text-sm font-medium text-text-dim mb-2">
+              <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">
                 Precios definitivos — Materiales
               </h2>
               <div className="border border-border rounded-xl overflow-hidden bg-surface divide-y divide-border">
@@ -362,7 +362,7 @@ export default function ProveedoresPage() {
           {/* Precios definitivos: equipos */}
           {equipos.length > 0 && (
             <section>
-              <h2 className="text-sm font-medium text-text-dim mb-2">
+              <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">
                 Precios definitivos — Equipos
               </h2>
               <div className="border border-border rounded-xl overflow-hidden bg-surface divide-y divide-border">

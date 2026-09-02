@@ -109,7 +109,7 @@ export default async function VisitaDetallePage({
         </Link>
       </header>
 
-      <div className="px-5 md:px-8 py-5 max-w-2xl space-y-8">
+      <div className="px-5 md:px-8 py-6 max-w-2xl space-y-6">
         {cliente?.direccion && (
           <p className="text-text-dim text-sm">{cliente.direccion}</p>
         )}
@@ -170,7 +170,7 @@ export default async function VisitaDetallePage({
         </section>
 
         <section>
-          <h2 className="text-sm font-medium text-text-dim mb-2">
+          <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">
             Cotización de esta visita
           </h2>
           {cotizacionRelacionada ? (
@@ -199,7 +199,7 @@ export default async function VisitaDetallePage({
         </section>
 
         <section>
-          <h2 className="text-sm font-medium text-text-dim mb-2">
+          <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">
             Inspección eléctrica de esta visita
           </h2>
           {inspeccionRelacionada ? (
@@ -225,7 +225,7 @@ export default async function VisitaDetallePage({
 
         {fotoUrls.length > 0 && (
           <section>
-            <h2 className="text-sm font-medium text-text-dim mb-2">Fotos</h2>
+            <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">Fotos</h2>
             <div className="grid grid-cols-3 gap-2">
               {fotoUrls.map((url, i) => (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -242,7 +242,7 @@ export default async function VisitaDetallePage({
 
         {visita.carpeta_fotos_drive_url && (
           <section>
-            <h2 className="text-sm font-medium text-text-dim mb-2">
+            <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">
               Carpeta de fotos (Drive)
             </h2>
             <a
@@ -260,7 +260,7 @@ export default async function VisitaDetallePage({
           <section className="grid grid-cols-2 gap-3">
             {visita.pdf_drive_url && (
               <div>
-                <h2 className="text-sm font-medium text-text-dim mb-2">
+                <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">
                   Respaldo interno
                 </h2>
                 <a
@@ -275,7 +275,7 @@ export default async function VisitaDetallePage({
             )}
             {visita.pdf_informe_drive_url && (
               <div>
-                <h2 className="text-sm font-medium text-text-dim mb-2">
+                <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">
                   Informe cliente
                 </h2>
                 <a
@@ -293,7 +293,7 @@ export default async function VisitaDetallePage({
 
         {audioSignedUrl && (
           <section>
-            <h2 className="text-sm font-medium text-text-dim mb-2">
+            <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">
               Nota de voz
             </h2>
             <audio src={audioSignedUrl} controls className="w-full" />
@@ -302,7 +302,7 @@ export default async function VisitaDetallePage({
 
         {visita.notas_voz_transcripcion && (
           <section>
-            <h2 className="text-sm font-medium text-text-dim mb-2">Notas / Descripción de la actividad</h2>
+            <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">Notas / Descripción de la actividad</h2>
             <p className="bg-surface border border-border rounded-xl p-4 text-sm">
               {visita.notas_voz_transcripcion}
             </p>
@@ -311,7 +311,7 @@ export default async function VisitaDetallePage({
 
         {Object.keys(medidas).length > 0 && (
           <section>
-            <h2 className="text-sm font-medium text-text-dim mb-2">Medidas</h2>
+            <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">Medidas</h2>
             <div className="bg-surface border border-border rounded-xl divide-y divide-border">
               {Object.entries(medidas).map(([k, v]) => (
                 <div key={k} className="flex justify-between px-4 py-3 text-sm">
@@ -324,7 +324,7 @@ export default async function VisitaDetallePage({
         )}
 
         <section>
-          <h2 className="text-sm font-medium text-text-dim mb-2">
+          <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">
             Detalles de la visita
           </h2>
           <div className="bg-surface border border-border rounded-xl divide-y divide-border text-sm">
@@ -373,7 +373,7 @@ export default async function VisitaDetallePage({
 
         {visita.prompt_diagrama_ia && (
           <section>
-            <h2 className="text-sm font-medium text-text-dim mb-2">
+            <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">
               Prompt para generar diagrama
             </h2>
             <pre className="bg-surface border border-border rounded-xl p-4 text-xs whitespace-pre-wrap font-sans">
@@ -382,7 +382,7 @@ export default async function VisitaDetallePage({
             <CopyPromptButton text={visita.prompt_diagrama_ia} />
 
             <div className="mt-4">
-              <h3 className="text-sm font-medium text-text-dim mb-2">Diagrama</h3>
+              <h3 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">Diagrama</h3>
               {diagramaUrl ? (
                 <div className="space-y-2">
                   {esDiagramaImagen ? (
@@ -419,7 +419,7 @@ export default async function VisitaDetallePage({
 
         {historialVersiones && historialVersiones.length > 0 && (
           <section>
-            <h2 className="text-sm font-medium text-text-dim mb-2 flex items-center gap-1.5">
+            <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2 flex items-center gap-1.5">
               <History size={14} /> Historial de versiones
             </h2>
             <div className="border border-border rounded-xl bg-surface divide-y divide-border">

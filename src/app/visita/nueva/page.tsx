@@ -226,7 +226,7 @@ export default function NuevaVisitaPage() {
         <h1 className="font-display text-lg">Nueva visita</h1>
       </header>
 
-      <div className="px-5 md:px-8 py-5 max-w-2xl space-y-8">
+      <div className="px-5 md:px-8 py-6 max-w-2xl space-y-6">
         {/* Cliente */}
         <section>
           <h2 className="text-sm font-medium text-text-dim mb-2">Cliente</h2>

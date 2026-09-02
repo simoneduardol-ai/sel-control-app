@@ -81,7 +81,7 @@ export default async function CotizacionDetallePage({
         </Link>
       </header>
 
-      <div className="px-5 md:px-8 py-5 max-w-2xl space-y-6">
+      <div className="px-5 md:px-8 py-6 max-w-2xl space-y-6">
         <div className="flex items-center justify-between">
           <StatusBadge status={cotizacion.estado} />
           <span className="font-display text-xl">
@@ -123,7 +123,7 @@ export default async function CotizacionDetallePage({
 
         {(etapas ?? []).map((etapa) => (
           <section key={etapa.id}>
-            <h2 className="text-sm font-medium text-text-dim mb-2">
+            <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-2">
               {etapa.nombre_etapa}
             </h2>
             <div className="bg-surface border border-border rounded-xl divide-y divide-border">
