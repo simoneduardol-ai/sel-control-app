@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { FileOutput } from "lucide-react";
 
 export default function EmitirPdfButton({ cotizacionId }: { cotizacionId: string }) {
+  const router = useRouter();
   const [cargando, setCargando] = useState(false);
   const [driveUrl, setDriveUrl] = useState<string | null>(null);
 
@@ -25,7 +27,11 @@ export default function EmitirPdfButton({ cotizacionId }: { cotizacionId: string
       alert("No se pudo emitir el PDF. Intenta de nuevo.");
     } finally {
       setCargando(false);
-      window.location.reload();
+      // router.refresh() en vez de window.location.reload(): una recarga
+      // completa de la página invalida el PDF que se acaba de abrir en la
+      // pestaña nueva (el "blob" muere junto con la página que lo creó),
+      // por eso se podía ver/imprimir pero no descargar.
+      router.refresh();
     }
   }
 

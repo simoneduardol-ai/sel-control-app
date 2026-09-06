@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { FileOutput } from "lucide-react";
 
 export default function EmitirPdfInspeccionButton({ inspeccionId }: { inspeccionId: string }) {
+  const router = useRouter();
   const [cargando, setCargando] = useState(false);
   const [driveUrl, setDriveUrl] = useState<string | null>(null);
 
@@ -23,7 +25,9 @@ export default function EmitirPdfInspeccionButton({ inspeccionId }: { inspeccion
       alert("No se pudo emitir el PDF. Intenta de nuevo.");
     } finally {
       setCargando(false);
-      window.location.reload();
+      // router.refresh() en vez de reload completo: no invalida el PDF
+      // recién abierto en la pestaña nueva.
+      router.refresh();
     }
   }
 
