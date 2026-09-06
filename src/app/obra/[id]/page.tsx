@@ -39,6 +39,19 @@ export default async function ObraDetallePage({
     .eq("obra_id", id)
     .order("fecha_visita", { ascending: false });
 
+  const bitacoraConFotos = await Promise.all(
+    (bitacora ?? []).map(async (entrada) => {
+      const fotoUrls: string[] = [];
+      for (const path of (entrada.fotos_avance ?? []).slice(0, 6)) {
+        const { data } = await supabase.storage
+          .from("visitas-media")
+          .createSignedUrl(path, 3600);
+        if (data?.signedUrl) fotoUrls.push(data.signedUrl);
+      }
+      return { ...entrada, fotoUrlsFirmadas: fotoUrls };
+    })
+  );
+
   const { data: historial } = await supabase
     .from("auditoria_estados")
     .select("id, estado_anterior, estado_nuevo, motivo, created_at")
@@ -158,13 +171,13 @@ export default async function ObraDetallePage({
             <h2 className="font-display text-sm uppercase tracking-wide text-text-dim">Bitácora</h2>
             <AgregarVisitaObraButton obraId={obra.id} avanceActual={obra.avance_porcentaje ?? 0} />
           </div>
-          {(bitacora ?? []).length === 0 ? (
+          {(bitacoraConFotos ?? []).length === 0 ? (
             <p className="text-text-dim text-sm text-center py-8">
               Sin visitas registradas todavía.
             </p>
           ) : (
             <div className="relative pl-5 space-y-6 before:absolute before:left-1.5 before:top-1 before:bottom-1 before:w-px before:bg-border">
-              {(bitacora ?? []).map((entrada) => (
+              {bitacoraConFotos.map((entrada) => (
                 <div key={entrada.id} className="relative">
                   <div className="absolute -left-5 top-1 w-3 h-3 rounded-full bg-accent" />
                   <div className="flex items-center gap-2 mb-1">
@@ -181,6 +194,19 @@ export default async function ObraDetallePage({
                     )}
                   </div>
                   <p className="text-sm">{entrada.descripcion_avance}</p>
+                  {entrada.fotoUrlsFirmadas.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {entrada.fotoUrlsFirmadas.map((url: string, i: number) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          key={i}
+                          src={url}
+                          alt=""
+                          className="w-16 h-16 rounded-lg object-cover border border-border"
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

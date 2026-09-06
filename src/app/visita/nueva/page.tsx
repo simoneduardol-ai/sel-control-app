@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -42,6 +42,30 @@ export default function NuevaVisitaPage() {
   const [personaEnTerreno, setPersonaEnTerreno] = useState("");
   const [horaInicio, setHoraInicio] = useState("");
   const [horaFin, setHoraFin] = useState("");
+
+  const [obrasEnCurso, setObrasEnCurso] = useState<
+    { id: string; nombreCliente: string }[]
+  >([]);
+  const [obraVinculadaId, setObraVinculadaId] = useState("");
+  const [avanceObra, setAvanceObra] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("obras_ejecucion")
+        .select("id, clientes(nombre)")
+        .eq("estado", "EN_CURSO");
+      setObrasEnCurso(
+        (data ?? []).map((o) => ({
+          id: o.id,
+          nombreCliente:
+            (o.clientes as unknown as { nombre: string } | null)?.nombre ??
+            "Sin nombre",
+        }))
+      );
+    })();
+  }, []);
+
   const [fotos, setFotos] = useState<File[]>([]);
   const [fotosPreview, setFotosPreview] = useState<string[]>([]);
   const [grabando, setGrabando] = useState(false);
@@ -201,13 +225,43 @@ export default function NuevaVisitaPage() {
 
       if (insertErr) throw insertErr;
 
+      // Si esta visita es de una obra en curso, se agrega también a su
+      // bitácora (con las mismas fotos) y se suma el % de avance si se dio.
+      if (obraVinculadaId) {
+        const avance = Number(avanceObra) || 0;
+
+        await supabase.from("bitacora_obra").insert({
+          obra_id: obraVinculadaId,
+          fecha_visita: new Date(fechaVisita).toISOString(),
+          descripcion_avance: notasCliente || notas || tipoTrabajo || null,
+          porcentaje_avance_esta_visita: avance,
+          fotos_avance: fotoUrls,
+        });
+
+        if (avance > 0) {
+          const { data: obraActual } = await supabase
+            .from("obras_ejecucion")
+            .select("avance_porcentaje")
+            .eq("id", obraVinculadaId)
+            .single();
+          const nuevoAvance = Math.min(
+            100,
+            (obraActual?.avance_porcentaje ?? 0) + avance
+          );
+          await supabase
+            .from("obras_ejecucion")
+            .update({ avance_porcentaje: nuevoAvance })
+            .eq("id", obraVinculadaId);
+        }
+      }
+
       // Archivar en Drive automáticamente (si está conectado). No bloquea
       // el guardado si falla o si Drive todavía no está conectado.
       fetch(`/api/visitas/${visita.id}/archivar`, { method: "POST" }).catch(
         () => {}
       );
 
-      router.push(`/visita/${visita.id}`);
+      router.push(obraVinculadaId ? `/obra/${obraVinculadaId}` : `/visita/${visita.id}`);
       router.refresh();
     } catch {
       setError("No se pudo guardar la visita. Intenta de nuevo.");
@@ -232,6 +286,44 @@ export default function NuevaVisitaPage() {
           <h2 className="text-sm font-medium text-text-dim mb-2">Cliente</h2>
           <ClienteSelector value={cliente} onChange={setCliente} />
         </section>
+
+        {/* Vincular a obra en curso */}
+        {obrasEnCurso.length > 0 && (
+          <section>
+            <h2 className="text-sm font-medium text-text-dim mb-2">
+              ¿Es una visita a una obra en curso?
+            </h2>
+            <select
+              value={obraVinculadaId}
+              onChange={(e) => setObraVinculadaId(e.target.value)}
+              className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+            >
+              <option value="">No, es una visita nueva</option>
+              {obrasEnCurso.map((o) => (
+                <option key={o.id} value={o.id}>
+                  Obra de {o.nombreCliente}
+                </option>
+              ))}
+            </select>
+            {obraVinculadaId && (
+              <div className="mt-3">
+                <label className="block text-xs text-text-dim mb-1.5">
+                  % de avance de esta visita (opcional)
+                </label>
+                <input
+                  type="number"
+                  value={avanceObra}
+                  onChange={(e) => setAvanceObra(e.target.value)}
+                  placeholder="Ej: 15"
+                  className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                />
+                <p className="text-text-dim text-xs mt-1">
+                  Esta visita (con sus fotos) quedará también en la bitácora de esa obra.
+                </p>
+              </div>
+            )}
+          </section>
+        )}
 
         {/* Fecha, hora y persona en terreno */}
         <section className="grid grid-cols-2 gap-3">
