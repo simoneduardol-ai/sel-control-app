@@ -50,6 +50,7 @@ export default function NuevaCotizacionContent({
   ]);
   const [mostrarPrecioPorItem, setMostrarPrecioPorItem] = useState(false);
   const [mostrarTotalMateriales, setMostrarTotalMateriales] = useState(false);
+  const [mostrarTotalEquipos, setMostrarTotalEquipos] = useState(false);
   const [conIva, setConIva] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,6 +87,7 @@ export default function NuevaCotizacionContent({
         setCliente(cot.clientes as unknown as ClienteOption);
         setMostrarPrecioPorItem(cot.mostrar_precio_por_item);
         setMostrarTotalMateriales(cot.mostrar_total_materiales);
+        setMostrarTotalEquipos(cot.mostrar_total_equipos);
         setConIva(cot.con_iva);
         setEstadoActual(cot.estado);
         if (cot.estado === "APROBADA") {
@@ -228,6 +230,7 @@ export default function NuevaCotizacionContent({
             total_equipos: totalEquipos,
             mostrar_precio_por_item: mostrarPrecioPorItem,
             mostrar_total_materiales: mostrarTotalMateriales,
+            mostrar_total_equipos: mostrarTotalEquipos,
             con_iva: conIva,
           })
           .eq("id", cotizacionId);
@@ -250,6 +253,7 @@ export default function NuevaCotizacionContent({
             total_equipos: totalEquipos,
             mostrar_precio_por_item: mostrarPrecioPorItem,
             mostrar_total_materiales: mostrarTotalMateriales,
+            mostrar_total_equipos: mostrarTotalEquipos,
             con_iva: conIva,
           })
           .select("id")
@@ -598,6 +602,15 @@ export default function NuevaCotizacionContent({
                   className="h-4 w-4 mt-0.5 accent-accent"
                 />
                 Mostrar el monto total de materiales (nunca la lista detallada)
+              </label>
+              <label className="flex items-start gap-2.5 text-sm cursor-pointer mt-3">
+                <input
+                  type="checkbox"
+                  checked={mostrarTotalEquipos}
+                  onChange={(e) => setMostrarTotalEquipos(e.target.checked)}
+                  className="h-4 w-4 mt-0.5 accent-accent"
+                />
+                Mostrar el monto total de equipos
               </label>
             </section>
           </div>

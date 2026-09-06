@@ -82,6 +82,12 @@ export async function POST(
     ),
   }));
 
+  const { data: cuotasData } = await supabase
+    .from("cotizacion_cuotas")
+    .select("etiqueta, monto")
+    .eq("cotizacion_id", id)
+    .order("orden");
+
   const pdfBuffer = await generarPdfCotizacion({
     numeroCotizacion,
     cliente: cliente?.nombre ?? "Cliente sin nombre",
@@ -92,9 +98,12 @@ export async function POST(
     totalEquipos: Number(cotizacion.total_equipos) || 0,
     mostrarPrecioPorItem: cotizacion.mostrar_precio_por_item,
     mostrarTotalMateriales: cotizacion.mostrar_total_materiales,
+    mostrarTotalEquipos: cotizacion.mostrar_total_equipos,
     conIva: cotizacion.con_iva,
     fecha: new Date().toLocaleDateString("es-CL", { dateStyle: "long" }),
     logoUrl: logoComoDataUri("logo-light.png"),
+    formaPagoPlan: cotizacion.forma_pago_plan,
+    cuotas: (cuotasData ?? []).map((c) => ({ etiqueta: c.etiqueta, monto: Number(c.monto) })),
   });
 
   let driveUrl: string | null = null;

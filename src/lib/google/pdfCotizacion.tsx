@@ -144,6 +144,29 @@ const styles = StyleSheet.create({
   puntoTitulo: { fontSize: 9, fontWeight: 700, marginBottom: 2 },
   puntoTexto: { fontSize: 8.5, color: TEXT_DIM, lineHeight: 1.5 },
 
+  planPagoBloque: { marginTop: 22 },
+  planPagoTitulo: {
+    fontSize: 9,
+    fontWeight: 700,
+    textTransform: "uppercase",
+    color: TEXT_DIM,
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  planPagoFila: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 4,
+    borderBottomWidth: 0.5,
+    borderBottomColor: BORDER,
+  },
+  planPagoFilaFinal: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingTop: 6,
+    fontWeight: 700,
+  },
+
   bannerCertificado: {
     backgroundColor: NAVY,
     marginTop: 28,
@@ -313,9 +336,12 @@ export async function generarPdfCotizacion({
   totalEquipos = 0,
   mostrarPrecioPorItem,
   mostrarTotalMateriales,
+  mostrarTotalEquipos = false,
   conIva,
   fecha,
   logoUrl,
+  formaPagoPlan = "contado",
+  cuotas = [],
 }: {
   numeroCotizacion: string;
   cliente: string;
@@ -326,9 +352,12 @@ export async function generarPdfCotizacion({
   totalEquipos?: number;
   mostrarPrecioPorItem: boolean;
   mostrarTotalMateriales: boolean;
+  mostrarTotalEquipos?: boolean;
   conIva: boolean;
   fecha: string;
   logoUrl: string;
+  formaPagoPlan?: "contado" | "partes";
+  cuotas?: { etiqueta: string; monto: number }[];
 }): Promise<Buffer> {
   const subtotal = totalMateriales + totalManoObra + totalEquipos;
   const iva = conIva ? subtotal * 0.19 : 0;
@@ -390,6 +419,12 @@ export async function generarPdfCotizacion({
                   <Text>{fmt(totalMateriales)}</Text>
                 </View>
               )}
+              {mostrarTotalEquipos && totalEquipos > 0 && (
+                <View style={styles.resumenFila}>
+                  <Text style={styles.resumenLabel}>Equipos</Text>
+                  <Text>{fmt(totalEquipos)}</Text>
+                </View>
+              )}
               <View style={styles.resumenFila}>
                 <Text style={styles.resumenLabel}>Subtotal</Text>
                 <Text>{fmt(subtotal)}</Text>
@@ -446,6 +481,23 @@ export async function generarPdfCotizacion({
                 <Text style={styles.puntoTexto}>{p.texto}</Text>
               </View>
             ))}
+          </View>
+
+          <View style={styles.planPagoBloque} wrap={false}>
+            <Text style={styles.planPagoTitulo}>Plan de pago</Text>
+            {formaPagoPlan === "contado" ? (
+              <Text style={styles.condicionesTexto}>Pago de contado.</Text>
+            ) : (
+              cuotas.map((c, i) => (
+                <View
+                  key={i}
+                  style={i === cuotas.length - 1 ? styles.planPagoFilaFinal : styles.planPagoFila}
+                >
+                  <Text>{c.etiqueta}</Text>
+                  <Text>{fmt(c.monto)}</Text>
+                </View>
+              ))
+            )}
           </View>
 
           <View style={styles.bannerCertificado} wrap={false}>

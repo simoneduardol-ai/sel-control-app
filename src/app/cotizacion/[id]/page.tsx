@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { StatusBadge } from "@/components/StatusBadge";
 import Sidebar from "@/components/Sidebar";
 import EmitirPdfButton from "@/components/EmitirPdfButton";
+import PlanDePagoSection from "@/components/PlanDePagoSection";
 import MarcarAprobadaButton from "@/components/MarcarAprobadaButton";
 import RevertirCotizacionButton from "@/components/RevertirCotizacionButton";
 import HistorialEstados from "@/components/HistorialEstados";
@@ -57,6 +58,8 @@ export default async function CotizacionDetallePage({
     (cotizacion.total_mano_obra ?? 0) +
     (cotizacion.total_equipos ?? 0);
 
+  const totalConIva = cotizacion.con_iva ? total * 1.19 : total;
+
   return (
     <div className="min-h-dvh bg-bg md:flex">
       <Sidebar />
@@ -100,6 +103,8 @@ export default async function CotizacionDetallePage({
             <span className="text-ok text-sm font-medium">Ver →</span>
           </Link>
         )}
+
+        <PlanDePagoSection cotizacionId={cotizacion.id} total={totalConIva} />
 
         <div className="grid grid-cols-2 gap-3">
           <EmitirPdfButton cotizacionId={cotizacion.id} />
