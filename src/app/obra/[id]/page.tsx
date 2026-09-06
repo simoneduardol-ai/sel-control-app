@@ -6,6 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import ObraAccionesEstado from "@/components/ObraAccionesEstado";
 import HistorialEstados from "@/components/HistorialEstados";
 import PagosObraSection from "@/components/PagosObraSection";
+import AgregarVisitaObraButton from "@/components/AgregarVisitaObraButton";
 import { StatusBadge } from "@/components/StatusBadge";
 
 export const dynamic = "force-dynamic";
@@ -153,23 +154,32 @@ export default async function ObraDetallePage({
         />
 
         <section>
-          <h2 className="font-display text-sm uppercase tracking-wide text-text-dim mb-3">Bitácora</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-display text-sm uppercase tracking-wide text-text-dim">Bitácora</h2>
+            <AgregarVisitaObraButton obraId={obra.id} avanceActual={obra.avance_porcentaje ?? 0} />
+          </div>
           {(bitacora ?? []).length === 0 ? (
             <p className="text-text-dim text-sm text-center py-8">
-              Sin visitas registradas todavía. El botón de &ldquo;agregar
-              visita en 10 segundos&rdquo; se habilita en la siguiente fase.
+              Sin visitas registradas todavía.
             </p>
           ) : (
             <div className="relative pl-5 space-y-6 before:absolute before:left-1.5 before:top-1 before:bottom-1 before:w-px before:bg-border">
               {(bitacora ?? []).map((entrada) => (
                 <div key={entrada.id} className="relative">
                   <div className="absolute -left-5 top-1 w-3 h-3 rounded-full bg-accent" />
-                  <p className="text-xs text-text-dim mb-1">
-                    {new Date(entrada.fecha_visita).toLocaleDateString(
-                      "es-CL",
-                      { day: "numeric", month: "long" }
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-xs text-text-dim">
+                      {new Date(entrada.fecha_visita).toLocaleDateString(
+                        "es-CL",
+                        { day: "numeric", month: "long" }
+                      )}
+                    </p>
+                    {entrada.porcentaje_avance_esta_visita > 0 && (
+                      <span className="text-[11px] bg-accent/10 text-accent rounded-full px-2 py-0.5">
+                        +{entrada.porcentaje_avance_esta_visita}%
+                      </span>
                     )}
-                  </p>
+                  </div>
                   <p className="text-sm">{entrada.descripcion_avance}</p>
                 </div>
               ))}
