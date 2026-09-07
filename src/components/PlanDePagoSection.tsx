@@ -57,6 +57,7 @@ export default function PlanDePagoSection({
   }, [cotizacionId]);
 
   const sumaCuotas = cuotas.reduce((s, c) => s + (Number(c.monto) || 0), 0);
+  const seExcede = sumaCuotas > total;
   const pagoFinal = Math.max(0, total - sumaCuotas);
 
   function agregarCuota() {
@@ -165,21 +166,38 @@ export default function PlanDePagoSection({
 
             <div className="flex items-center justify-between pt-3 border-t border-border">
               <span className="text-sm font-medium">Pago final</span>
-              <span className="font-display text-base">{fmt(pagoFinal)}</span>
+              <span
+                className={`font-display text-base ${seExcede ? "text-danger" : ""}`}
+              >
+                {fmt(pagoFinal)}
+              </span>
             </div>
-            <p className="text-text-dim text-xs">
-              Se calcula solo: Total ({fmt(total)}) menos lo que vayas agregando arriba.
-            </p>
+            {seExcede ? (
+              <p className="text-danger text-xs font-medium">
+                Los pagos que agregaste suman {fmt(sumaCuotas)}, {fmt(sumaCuotas - total)}{" "}
+                más que el total ({fmt(total)}). Ajusta algún monto antes de guardar.
+              </p>
+            ) : (
+              <p className="text-text-dim text-xs">
+                Se calcula solo: Total ({fmt(total)}) menos lo que vayas agregando arriba.
+              </p>
+            )}
           </div>
         )}
 
         <button
           onClick={guardar}
-          disabled={guardando}
+          disabled={guardando || (tipo === "partes" && seExcede)}
           className="w-full rounded-xl bg-accent text-accent-text font-semibold py-2.5 text-sm disabled:opacity-60 flex items-center justify-center gap-1.5"
         >
           {guardado ? <Check size={16} /> : null}
-          {guardando ? "Guardando..." : guardado ? "Guardado" : "Guardar plan de pago"}
+          {guardando
+            ? "Guardando..."
+            : guardado
+            ? "Guardado"
+            : tipo === "partes" && seExcede
+            ? "Corrige los montos para guardar"
+            : "Guardar plan de pago"}
         </button>
       </div>
     </section>
