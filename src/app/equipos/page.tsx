@@ -58,9 +58,33 @@ export default function EquiposPage() {
     cargar();
   }
 
-  async function eliminar(id: string) {
-    await supabase.from("equipos_maestros").delete().eq("id", id);
-    cargar();
+  const [eliminando, setEliminando] = useState<string | null>(null);
+  const [errorEliminar, setErrorEliminar] = useState<string | null>(null);
+
+  async function eliminar(id: string, nombreEquipo: string) {
+    const confirmado = window.confirm(
+      `¿Eliminar "${nombreEquipo}"? Esta acción no se puede deshacer.`
+    );
+    if (!confirmado) return;
+
+    setEliminando(id);
+    setErrorEliminar(null);
+    const { error } = await supabase.from("equipos_maestros").delete().eq("id", id);
+
+    if (error) {
+      // Código 23503 = violación de llave foránea: el equipo está en uso
+      // en algún catálogo o cotización, la base de datos lo protege.
+      if (error.code === "23503") {
+        setErrorEliminar(
+          `No se pudo eliminar "${nombreEquipo}" — está siendo usado en al menos un ítem de catálogo o una cotización existente.`
+        );
+      } else {
+        setErrorEliminar(`No se pudo eliminar "${nombreEquipo}". Intenta de nuevo.`);
+      }
+    } else {
+      cargar();
+    }
+    setEliminando(null);
   }
 
   return (
@@ -71,6 +95,15 @@ export default function EquiposPage() {
         <p className="text-text-dim text-sm mb-6">
           {equipos.length} equipos en el catálogo
         </p>
+
+        {errorEliminar && (
+          <div className="flex items-start justify-between gap-3 bg-danger/10 border border-danger/30 text-danger text-sm rounded-xl px-4 py-3 mb-4">
+            <p>{errorEliminar}</p>
+            <button onClick={() => setErrorEliminar(null)} className="shrink-0 font-medium">
+              Cerrar
+            </button>
+          </div>
+        )}
 
         {/* Formulario de agregar */}
         <div className="border border-dashed border-border rounded-xl p-4 mb-6 space-y-3">
@@ -146,8 +179,9 @@ export default function EquiposPage() {
                   </td>
                   <td className="px-2 py-3">
                     <button
-                      onClick={() => eliminar(eq.id)}
-                      className="text-text-dim"
+                      onClick={() => eliminar(eq.id, eq.nombre)}
+                      disabled={eliminando === eq.id}
+                      className="text-text-dim disabled:opacity-40"
                     >
                       <Trash2 size={16} />
                     </button>
