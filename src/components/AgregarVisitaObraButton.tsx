@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Upload, Loader2 } from "lucide-react";
 
 export default function AgregarVisitaObraButton({
   obraId,
@@ -14,11 +14,35 @@ export default function AgregarVisitaObraButton({
 }) {
   const router = useRouter();
   const supabase = createClient();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [abierto, setAbierto] = useState(false);
   const [fecha, setFecha] = useState(() => new Date().toISOString().slice(0, 10));
   const [descripcion, setDescripcion] = useState("");
   const [porcentaje, setPorcentaje] = useState("");
+  const [fotos, setFotos] = useState<string[]>([]);
+  const [subiendoFotos, setSubiendoFotos] = useState(false);
   const [guardando, setGuardando] = useState(false);
+
+  async function subirFotos(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    setSubiendoFotos(true);
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const nuevas: string[] = [];
+    for (const file of files) {
+      const ext = file.name.split(".").pop();
+      const path = `${user?.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await supabase.storage.from("visitas-media").upload(path, file);
+      if (!error) nuevas.push(path);
+    }
+    setFotos((prev) => [...prev, ...nuevas]);
+    setSubiendoFotos(false);
+    if (inputRef.current) inputRef.current.value = "";
+  }
 
   async function guardar() {
     setGuardando(true);
@@ -30,6 +54,7 @@ export default function AgregarVisitaObraButton({
       fecha_visita: new Date(fecha).toISOString(),
       descripcion_avance: descripcion || null,
       porcentaje_avance_esta_visita: avanceEstaVisita,
+      fotos_avance: fotos,
     });
 
     if (avanceEstaVisita > 0) {
@@ -44,6 +69,7 @@ export default function AgregarVisitaObraButton({
     setAbierto(false);
     setDescripcion("");
     setPorcentaje("");
+    setFotos([]);
     router.refresh();
   }
 
@@ -103,6 +129,39 @@ export default function AgregarVisitaObraButton({
                   Se suma al avance total (hoy: {avanceActual}%). Déjalo en blanco si esta
                   visita no cambió el % de avance.
                 </p>
+              </div>
+
+              <div>
+                <label className="block text-xs text-text-dim mb-1.5">
+                  Fotos (opcional)
+                </label>
+                <input
+                  ref={inputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={subirFotos}
+                />
+                {fotos.length > 0 && (
+                  <p className="text-text-dim text-xs mb-2">
+                    {fotos.length} foto{fotos.length > 1 ? "s" : ""} lista
+                    {fotos.length > 1 ? "s" : ""}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => inputRef.current?.click()}
+                  disabled={subiendoFotos}
+                  className="flex items-center gap-1.5 text-accent text-sm font-medium disabled:opacity-60"
+                >
+                  {subiendoFotos ? (
+                    <Loader2 size={15} className="animate-spin" />
+                  ) : (
+                    <Upload size={15} />
+                  )}
+                  {subiendoFotos ? "Subiendo..." : "Agregar fotos"}
+                </button>
               </div>
 
               <button

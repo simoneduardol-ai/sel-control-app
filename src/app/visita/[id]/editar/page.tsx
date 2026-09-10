@@ -35,6 +35,7 @@ export default function EditarVisitaPage() {
   const [estadoSeguimiento, setEstadoSeguimiento] = useState("En progreso");
   const [referidoPor, setReferidoPor] = useState("");
   const [notasCliente, setNotasCliente] = useState("");
+  const [hallazgos, setHallazgos] = useState("");
   const [requiereInforme, setRequiereInforme] = useState(false);
 
   const [guardando, setGuardando] = useState(false);
@@ -64,6 +65,7 @@ export default function EditarVisitaPage() {
         setEstadoSeguimiento(data.estado_seguimiento ?? "En progreso");
         setReferidoPor(data.referido_por ?? "");
         setNotasCliente(data.notas_cliente ?? "");
+        setHallazgos(data.notas_voz_transcripcion ?? "");
         setRequiereInforme(!!data.requiere_informe_cliente);
       }
       setCargando(false);
@@ -87,6 +89,7 @@ export default function EditarVisitaPage() {
           estado_seguimiento: estadoSeguimiento || null,
           referido_por: referidoPor || null,
           notas_cliente: notasCliente || null,
+          notas_voz_transcripcion: hallazgos || null,
           requiere_informe_cliente: requiereInforme,
         }),
       });
@@ -235,6 +238,19 @@ export default function EditarVisitaPage() {
                   onChange={(e) => setReferidoPor(e.target.value)}
                   placeholder="Referido por (opcional)"
                   className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-text-dim mb-1.5">
+                  Hallazgos y observaciones (esto es lo que sale en el informe del
+                  cliente)
+                </label>
+                <textarea
+                  value={hallazgos}
+                  onChange={(e) => setHallazgos(e.target.value)}
+                  placeholder="Hallazgos y observaciones de la visita..."
+                  rows={4}
+                  className="w-full rounded-xl bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent resize-none"
                 />
               </div>
               <textarea
