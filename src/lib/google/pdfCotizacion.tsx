@@ -342,6 +342,7 @@ export async function generarPdfCotizacion({
   logoUrl,
   formaPagoPlan = "contado",
   cuotas = [],
+  vigenciaDias = 10,
 }: {
   numeroCotizacion: string;
   cliente: string;
@@ -358,6 +359,7 @@ export async function generarPdfCotizacion({
   logoUrl: string;
   formaPagoPlan?: "contado" | "partes";
   cuotas?: { etiqueta: string; monto: number }[];
+  vigenciaDias?: number;
 }): Promise<Buffer> {
   const subtotal = totalMateriales + totalManoObra + totalEquipos;
   const iva = conIva ? subtotal * 0.19 : 0;
@@ -452,7 +454,7 @@ export async function generarPdfCotizacion({
             <View>
               <Text style={styles.condicionesTitulo}>Condiciones</Text>
               <Text style={styles.condicionesTexto}>
-                Validez de esta cotización: 10 días desde la fecha de emisión.{"\n"}
+                Validez de esta cotización: {vigenciaDias} días desde la fecha de emisión.{"\n"}
                 Forma de pago: a convenir con el cliente.{"\n"}
                 Los valores no incluyen imprevistos no contemplados en este detalle.
               </Text>

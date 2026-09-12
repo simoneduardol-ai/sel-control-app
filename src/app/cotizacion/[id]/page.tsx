@@ -85,6 +85,24 @@ export default async function CotizacionDetallePage({
       </header>
 
       <div className="px-5 md:px-8 py-6 max-w-2xl space-y-6">
+        <div className="flex items-center gap-3 pb-4 border-b border-border">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo-dark.jpg"
+            alt="SEL"
+            className="h-11 w-11 rounded-full object-cover shrink-0"
+          />
+          <div>
+            <p className="font-medium text-sm">Servicios Eléctricos López</p>
+            <p className="text-text-dim text-xs">
+              Válida por {cotizacion.vigencia_dias ?? 10} días desde el{" "}
+              {new Date(cotizacion.created_at).toLocaleDateString("es-CL", {
+                dateStyle: "long",
+              })}
+            </p>
+          </div>
+        </div>
+
         <div className="flex items-center justify-between">
           <StatusBadge status={cotizacion.estado} />
           <span className="font-display text-xl">

@@ -51,6 +51,7 @@ export default function NuevaCotizacionContent({
   const [mostrarPrecioPorItem, setMostrarPrecioPorItem] = useState(false);
   const [mostrarTotalMateriales, setMostrarTotalMateriales] = useState(false);
   const [mostrarTotalEquipos, setMostrarTotalEquipos] = useState(false);
+  const [vigenciaDias, setVigenciaDias] = useState(10);
   const [conIva, setConIva] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,6 +89,7 @@ export default function NuevaCotizacionContent({
         setMostrarPrecioPorItem(cot.mostrar_precio_por_item);
         setMostrarTotalMateriales(cot.mostrar_total_materiales);
         setMostrarTotalEquipos(cot.mostrar_total_equipos);
+        setVigenciaDias(cot.vigencia_dias ?? 10);
         setConIva(cot.con_iva);
         setEstadoActual(cot.estado);
         if (cot.estado === "APROBADA") {
@@ -231,6 +233,7 @@ export default function NuevaCotizacionContent({
             mostrar_precio_por_item: mostrarPrecioPorItem,
             mostrar_total_materiales: mostrarTotalMateriales,
             mostrar_total_equipos: mostrarTotalEquipos,
+            vigencia_dias: vigenciaDias,
             con_iva: conIva,
           })
           .eq("id", cotizacionId);
@@ -254,6 +257,7 @@ export default function NuevaCotizacionContent({
             mostrar_precio_por_item: mostrarPrecioPorItem,
             mostrar_total_materiales: mostrarTotalMateriales,
             mostrar_total_equipos: mostrarTotalEquipos,
+            vigencia_dias: vigenciaDias,
             con_iva: conIva,
           })
           .select("id")
@@ -612,6 +616,19 @@ export default function NuevaCotizacionContent({
                 />
                 Mostrar el monto total de equipos
               </label>
+              <div className="mt-3">
+                <label className="block text-sm mb-1.5">Vigencia de la cotización</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    value={vigenciaDias}
+                    onChange={(e) => setVigenciaDias(Number(e.target.value) || 10)}
+                    className="w-20 rounded-lg bg-surface border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                  <span className="text-sm text-text-dim">días desde la emisión</span>
+                </div>
+              </div>
             </section>
           </div>
         </div>

@@ -104,6 +104,7 @@ export async function POST(
     logoUrl: logoComoDataUri("logo-light.png"),
     formaPagoPlan: cotizacion.forma_pago_plan,
     cuotas: (cuotasData ?? []).map((c) => ({ etiqueta: c.etiqueta, monto: Number(c.monto) })),
+    vigenciaDias: cotizacion.vigencia_dias ?? 10,
   });
 
   let driveUrl: string | null = null;

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { ArrowLeft, Copy, Check, Plus, ImageDown } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import { generarImagenLista, descargarImagen } from "@/lib/imagenLista";
+import ListaPorProveedorSection from "@/components/ListaPorProveedorSection";
 
 type MaterialAgrupado = {
   material_id: string;
@@ -416,6 +417,8 @@ export default function ProveedoresPage() {
               {guardando ? "Guardando..." : guardado ? "✓ Precios guardados" : "Guardar precios definitivos"}
             </button>
           )}
+
+          <ListaPorProveedorSection cotizacionId={cotizacionId} />
         </div>
       </main>
     </div>
