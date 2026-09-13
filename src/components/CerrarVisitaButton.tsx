@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { CheckCircle2, RotateCcw } from "lucide-react";
+import { CheckCircle2, RotateCcw, XCircle } from "lucide-react";
 
 export default function CerrarVisitaButton({
   visitaId,
@@ -29,6 +29,16 @@ export default function CerrarVisitaButton({
     router.refresh();
   }
 
+  async function marcarSinSeguimiento() {
+    setGuardando(true);
+    await supabase
+      .from("visitas_terreno")
+      .update({ estado: "no_requiere_seguimiento" })
+      .eq("id", visitaId);
+    setGuardando(false);
+    router.refresh();
+  }
+
   async function reabrir() {
     setGuardando(true);
     await supabase
@@ -39,7 +49,7 @@ export default function CerrarVisitaButton({
     router.refresh();
   }
 
-  if (estadoActual === "cerrada") {
+  if (estadoActual === "cerrada" || estadoActual === "no_requiere_seguimiento") {
     return (
       <button
         onClick={reabrir}
@@ -54,13 +64,24 @@ export default function CerrarVisitaButton({
 
   return (
     <>
-      <button
-        onClick={() => setMostrarModal(true)}
-        className="flex items-center justify-center gap-2 w-full rounded-xl bg-ok text-white font-semibold py-3 text-sm"
-      >
-        <CheckCircle2 size={16} />
-        Marcar como cerrada
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={() => setMostrarModal(true)}
+          className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-ok text-white font-semibold py-3 text-sm"
+        >
+          <CheckCircle2 size={16} />
+          Marcar como cerrada
+        </button>
+        <button
+          onClick={marcarSinSeguimiento}
+          disabled={guardando}
+          className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-border text-text-dim font-medium py-3 text-sm disabled:opacity-60"
+          title="El flujo avanzó sin necesitar otra visita (ej. la cotización siguió sola) — no cuenta como visita ejecutada"
+        >
+          <XCircle size={16} />
+          No requiere seguimiento
+        </button>
+      </div>
 
       {mostrarModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-5">

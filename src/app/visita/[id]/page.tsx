@@ -132,6 +132,11 @@ export default async function VisitaDetallePage({
               Cerrada
             </span>
           )}
+          {visita.estado === "no_requiere_seguimiento" && (
+            <span className="text-xs font-medium bg-border text-text-dim rounded-full px-3 py-1">
+              No requiere seguimiento
+            </span>
+          )}
           {visita.tipo_trabajo && (
             <span className="text-xs font-medium bg-surface border border-border rounded-full px-3 py-1">
               {visita.tipo_trabajo}

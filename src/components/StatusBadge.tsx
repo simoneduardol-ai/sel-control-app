@@ -4,6 +4,7 @@ const STATUS_STYLES: Record<string, string> = {
   diagrama: "bg-info/15 text-info",
   cotizando: "bg-accent/15 text-accent",
   cerrada: "bg-ok/15 text-ok",
+  no_requiere_seguimiento: "bg-border text-text-dim",
   // cotizaciones
   BORRADOR: "bg-text-dim/15 text-text-dim",
   EN_PROVEEDORES: "bg-info/15 text-info",
@@ -31,6 +32,7 @@ const STATUS_LABELS: Record<string, string> = {
   diagrama: "Diagrama",
   cotizando: "Cotizando",
   cerrada: "Cerrada",
+  no_requiere_seguimiento: "No requiere seguimiento",
   BORRADOR: "Borrador",
   EN_PROVEEDORES: "En proveedores",
   ENVIADA: "Enviada",

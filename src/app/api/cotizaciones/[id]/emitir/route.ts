@@ -133,7 +133,10 @@ export async function POST(
   await supabase
     .from("cotizaciones")
     .update({
-      estado: cotizacion.estado === "BORRADOR" ? "ENVIADA" : cotizacion.estado,
+      // Emitir el PDF significa que se está mandando al cliente — el estado
+      // avanza a ENVIADA sin importar de dónde venía (BORRADOR,
+      // EN_PROVEEDORES, etc.), salvo que ya esté APROBADA (no retrocede).
+      estado: cotizacion.estado === "APROBADA" ? "APROBADA" : "ENVIADA",
       pdf_url: driveUrl,
     })
     .eq("id", id);
