@@ -7,6 +7,7 @@ import ObraAccionesEstado from "@/components/ObraAccionesEstado";
 import HistorialEstados from "@/components/HistorialEstados";
 import PagosObraSection from "@/components/PagosObraSection";
 import AgregarVisitaObraButton from "@/components/AgregarVisitaObraButton";
+import ChecklistMaterialesObra from "@/components/ChecklistMaterialesObra";
 import { StatusBadge } from "@/components/StatusBadge";
 
 export const dynamic = "force-dynamic";
@@ -48,7 +49,14 @@ export default async function ObraDetallePage({
           .createSignedUrl(path, 3600);
         if (data?.signedUrl) fotoUrls.push(data.signedUrl);
       }
-      return { ...entrada, fotoUrlsFirmadas: fotoUrls };
+      let audioUrlFirmada: string | null = null;
+      if (entrada.nota_voz_url) {
+        const { data } = await supabase.storage
+          .from("visitas-media")
+          .createSignedUrl(entrada.nota_voz_url, 3600);
+        audioUrlFirmada = data?.signedUrl ?? null;
+      }
+      return { ...entrada, fotoUrlsFirmadas: fotoUrls, audioUrlFirmada };
     })
   );
 
@@ -166,6 +174,8 @@ export default async function ObraDetallePage({
           obraFinalizada={obra.estado === "FINALIZADA"}
         />
 
+        <ChecklistMaterialesObra obraId={obra.id} cotizacionId={obra.cotizacion_id} />
+
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-display text-sm uppercase tracking-wide text-text-dim">Bitácora</h2>
@@ -194,6 +204,13 @@ export default async function ObraDetallePage({
                     )}
                   </div>
                   <p className="text-sm">{entrada.descripcion_avance}</p>
+                  {entrada.audioUrlFirmada && (
+                    <audio
+                      src={entrada.audioUrlFirmada}
+                      controls
+                      className="h-8 mt-2 max-w-full"
+                    />
+                  )}
                   {entrada.fotoUrlsFirmadas.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-2">
                       {entrada.fotoUrlsFirmadas.map((url: string, i: number) => (

@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, X, Upload, Loader2 } from "lucide-react";
+import { Plus, X, Upload, Loader2, Mic, Square } from "lucide-react";
 
 export default function AgregarVisitaObraButton({
   obraId,
@@ -15,13 +15,45 @@ export default function AgregarVisitaObraButton({
   const router = useRouter();
   const supabase = createClient();
   const inputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
   const [abierto, setAbierto] = useState(false);
   const [fecha, setFecha] = useState(() => new Date().toISOString().slice(0, 10));
   const [descripcion, setDescripcion] = useState("");
   const [porcentaje, setPorcentaje] = useState("");
   const [fotos, setFotos] = useState<string[]>([]);
   const [subiendoFotos, setSubiendoFotos] = useState(false);
+  const [grabando, setGrabando] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const [errorMic, setErrorMic] = useState<string | null>(null);
+
+  async function iniciarGrabacion() {
+    setErrorMic(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      chunksRef.current = [];
+      recorder.ondataavailable = (e) => chunksRef.current.push(e.data);
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        setAudioBlob(blob);
+        setAudioUrl(URL.createObjectURL(blob));
+        stream.getTracks().forEach((t) => t.stop());
+      };
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setGrabando(true);
+    } catch {
+      setErrorMic("No se pudo acceder al micrófono. Revisa los permisos.");
+    }
+  }
+
+  function detenerGrabacion() {
+    mediaRecorderRef.current?.stop();
+    setGrabando(false);
+  }
 
   async function subirFotos(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -49,12 +81,25 @@ export default function AgregarVisitaObraButton({
 
     const avanceEstaVisita = Number(porcentaje) || 0;
 
+    let notaVozUrl: string | null = null;
+    if (audioBlob) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const path = `${user?.id}/${Date.now()}-nota-voz.webm`;
+      const { error } = await supabase.storage
+        .from("visitas-media")
+        .upload(path, audioBlob);
+      if (!error) notaVozUrl = path;
+    }
+
     await supabase.from("bitacora_obra").insert({
       obra_id: obraId,
       fecha_visita: new Date(fecha).toISOString(),
       descripcion_avance: descripcion || null,
       porcentaje_avance_esta_visita: avanceEstaVisita,
       fotos_avance: fotos,
+      nota_voz_url: notaVozUrl,
     });
 
     if (avanceEstaVisita > 0) {
@@ -70,6 +115,8 @@ export default function AgregarVisitaObraButton({
     setDescripcion("");
     setPorcentaje("");
     setFotos([]);
+    setAudioBlob(null);
+    setAudioUrl(null);
     router.refresh();
   }
 
@@ -162,6 +209,45 @@ export default function AgregarVisitaObraButton({
                   )}
                   {subiendoFotos ? "Subiendo..." : "Agregar fotos"}
                 </button>
+              </div>
+
+              <div>
+                <label className="block text-xs text-text-dim mb-1.5">
+                  Nota de voz (opcional)
+                </label>
+                {!audioUrl ? (
+                  <button
+                    type="button"
+                    onClick={grabando ? detenerGrabacion : iniciarGrabacion}
+                    className={`flex items-center gap-1.5 text-sm font-medium ${
+                      grabando ? "text-danger" : "text-accent"
+                    }`}
+                  >
+                    {grabando ? <Square size={15} /> : <Mic size={15} />}
+                    {grabando ? "Detener grabación" : "Grabar nota de voz"}
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <audio src={audioUrl} controls className="h-9 flex-1" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAudioBlob(null);
+                        setAudioUrl(null);
+                      }}
+                      className="text-text-dim"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
+                {errorMic && (
+                  <p className="text-danger text-[11px] mt-1">{errorMic}</p>
+                )}
+                <p className="text-text-dim text-[11px] mt-1">
+                  Se guarda el audio tal cual — no se transcribe automáticamente a
+                  texto.
+                </p>
               </div>
 
               <button
