@@ -418,6 +418,34 @@ export default function ProveedoresPage() {
             </button>
           )}
 
+          {(() => {
+            const materialesSinCodigo = materiales.filter(
+              (m) => !preciosMateriales[m.material_id]?.codigo
+            );
+            const equiposSinCodigo = equipos.filter(
+              (e) => !preciosEquipos[e.equipo_id]?.codigo
+            );
+            const totalSinCodigo = materialesSinCodigo.length + equiposSinCodigo.length;
+            if (totalSinCodigo === 0) return null;
+            return (
+              <div className="border border-warn/30 bg-warn/10 rounded-xl p-4">
+                <p className="text-sm font-medium text-warn mb-2">
+                  ⚠ {totalSinCodigo} ítem{totalSinCodigo > 1 ? "s" : ""} sin proveedor
+                  asignado — no {totalSinCodigo > 1 ? "aparecen" : "aparece"} en ninguna
+                  lista de compra por proveedor:
+                </p>
+                <ul className="text-sm space-y-1">
+                  {materialesSinCodigo.map((m) => (
+                    <li key={m.material_id}>• {m.nombre}</li>
+                  ))}
+                  {equiposSinCodigo.map((e) => (
+                    <li key={e.equipo_id}>• {e.nombre}</li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })()}
+
           <ListaPorProveedorSection cotizacionId={cotizacionId} />
         </div>
       </main>
