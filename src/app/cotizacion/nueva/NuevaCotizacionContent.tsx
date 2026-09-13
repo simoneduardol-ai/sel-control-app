@@ -42,9 +42,15 @@ export default function NuevaCotizacionContent({
   const esEdicion = !!cotizacionId;
 
   const clienteIdPrecargado = searchParams.get("cliente_id");
-  const visitaId = searchParams.get("visita_id");
+  const visitaIdPrecargada = searchParams.get("visita_id");
 
   const [cliente, setCliente] = useState<ClienteOption | null>(null);
+  const [visitaId, setVisitaId] = useState<string | null>(visitaIdPrecargada);
+  const [visitaPendienteDetectada, setVisitaPendienteDetectada] = useState<{
+    id: string;
+    fecha: string;
+  } | null>(null);
+  const [avisoVisitaResuelto, setAvisoVisitaResuelto] = useState(false);
   const [etapas, setEtapas] = useState<Etapa[]>([
     { rowId: crypto.randomUUID(), nombre: "", items: [] },
   ]);
@@ -73,6 +79,43 @@ export default function NuevaCotizacionContent({
       if (data) setCliente(data);
     })();
   }, [clienteIdPrecargado, esEdicion]);
+
+  // Si el cliente elegido tiene una visita pendiente sin resolver, y esta
+  // cotización no vino ya vinculada a una visita específica, avisar en vez
+  // de dejarla huérfana (como pasó con la cotización de Daniel Cumsille).
+  useEffect(() => {
+    if (esEdicion || visitaIdPrecargada || !cliente) {
+      setVisitaPendienteDetectada(null);
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from("visitas_terreno")
+        .select("id, fecha")
+        .eq("cliente_id", cliente.id)
+        .eq("estado", "pendiente")
+        .order("fecha", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      setVisitaPendienteDetectada(data);
+      setAvisoVisitaResuelto(false);
+    })();
+  }, [cliente, esEdicion, visitaIdPrecargada]);
+
+  async function vincularVisitaPendiente() {
+    if (!visitaPendienteDetectada) return;
+    setVisitaId(visitaPendienteDetectada.id);
+    setAvisoVisitaResuelto(true);
+  }
+
+  async function marcarVisitaSinSeguimiento() {
+    if (!visitaPendienteDetectada) return;
+    await supabase
+      .from("visitas_terreno")
+      .update({ estado: "no_requiere_seguimiento" })
+      .eq("id", visitaPendienteDetectada.id);
+    setAvisoVisitaResuelto(true);
+  }
 
   // Cargar la cotización completa cuando estamos en modo edición
   useEffect(() => {
@@ -482,6 +525,44 @@ export default function NuevaCotizacionContent({
             <section>
               <h2 className="text-sm font-medium text-text-dim mb-2">Cliente</h2>
               <ClienteSelector value={cliente} onChange={setCliente} />
+              {visitaPendienteDetectada && !avisoVisitaResuelto && (
+                <div className="mt-2 border border-warn/30 bg-warn/10 rounded-xl p-3">
+                  <p className="text-sm mb-2">
+                    Este cliente tiene una visita pendiente del{" "}
+                    {new Date(visitaPendienteDetectada.fecha).toLocaleDateString(
+                      "es-CL",
+                      { day: "2-digit", month: "short", year: "numeric" }
+                    )}
+                    . ¿La vinculas a esta cotización, o no corresponde?
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={vincularVisitaPendiente}
+                      className="text-xs font-medium bg-accent text-accent-text rounded-lg px-3 py-1.5"
+                    >
+                      Vincular esta visita
+                    </button>
+                    <button
+                      type="button"
+                      onClick={marcarVisitaSinSeguimiento}
+                      className="text-xs font-medium border border-border rounded-lg px-3 py-1.5"
+                    >
+                      No requiere seguimiento
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAvisoVisitaResuelto(true)}
+                      className="text-xs font-medium text-text-dim px-3 py-1.5"
+                    >
+                      Ignorar por ahora
+                    </button>
+                  </div>
+                </div>
+              )}
+              {visitaId && avisoVisitaResuelto && (
+                <p className="text-ok text-xs mt-2">✓ Visita vinculada a esta cotización.</p>
+              )}
             </section>
 
             <section>
