@@ -7,6 +7,7 @@ import Sidebar from "@/components/Sidebar";
 import { StatusBadge } from "@/components/StatusBadge";
 import DiagramaUploader from "@/components/DiagramaUploader";
 import CerrarVisitaButton from "@/components/CerrarVisitaButton";
+import ItemsPersonalizadosSection from "@/components/ItemsPersonalizadosSection";
 
 export const dynamic = "force-dynamic";
 
@@ -156,6 +157,8 @@ export default async function VisitaDetallePage({
         </div>
 
         <CerrarVisitaButton visitaId={visita.id} estadoActual={visita.estado} />
+
+        <ItemsPersonalizadosSection visitaId={visita.id} />
 
         <section className="grid grid-cols-2 gap-3">
           <Link

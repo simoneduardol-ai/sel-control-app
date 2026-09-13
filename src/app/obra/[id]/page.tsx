@@ -8,6 +8,7 @@ import HistorialEstados from "@/components/HistorialEstados";
 import PagosObraSection from "@/components/PagosObraSection";
 import AgregarVisitaObraButton from "@/components/AgregarVisitaObraButton";
 import ChecklistMaterialesObra from "@/components/ChecklistMaterialesObra";
+import ItemsPersonalizadosSection from "@/components/ItemsPersonalizadosSection";
 import { StatusBadge } from "@/components/StatusBadge";
 
 export const dynamic = "force-dynamic";
@@ -175,6 +176,8 @@ export default async function ObraDetallePage({
         />
 
         <ChecklistMaterialesObra obraId={obra.id} cotizacionId={obra.cotizacion_id} />
+
+        <ItemsPersonalizadosSection obraId={obra.id} />
 
         <section>
           <div className="flex items-center justify-between mb-3">
