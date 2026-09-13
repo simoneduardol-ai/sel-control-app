@@ -224,6 +224,16 @@ export default async function ObraDetallePage({
                       ))}
                     </div>
                   )}
+                  {entrada.carpeta_drive_url && (
+                    <a
+                      href={entrada.carpeta_drive_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-accent text-xs font-medium inline-block mt-2"
+                    >
+                      Ver fotos en Drive ↗
+                    </a>
+                  )}
                 </div>
               ))}
             </div>

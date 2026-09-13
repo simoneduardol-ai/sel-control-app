@@ -21,7 +21,8 @@ export default function AgregarVisitaObraButton({
   const [fecha, setFecha] = useState(() => new Date().toISOString().slice(0, 10));
   const [descripcion, setDescripcion] = useState("");
   const [porcentaje, setPorcentaje] = useState("");
-  const [fotos, setFotos] = useState<string[]>([]);
+  const [fotos, setFotos] = useState<{ path: string; preview: string }[]>([]);
+  const [carpetaDriveUrl, setCarpetaDriveUrl] = useState("");
   const [subiendoFotos, setSubiendoFotos] = useState(false);
   const [grabando, setGrabando] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -64,16 +65,20 @@ export default function AgregarVisitaObraButton({
       data: { user },
     } = await supabase.auth.getUser();
 
-    const nuevas: string[] = [];
+    const nuevas: { path: string; preview: string }[] = [];
     for (const file of files) {
       const ext = file.name.split(".").pop();
       const path = `${user?.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const { error } = await supabase.storage.from("visitas-media").upload(path, file);
-      if (!error) nuevas.push(path);
+      if (!error) nuevas.push({ path, preview: URL.createObjectURL(file) });
     }
     setFotos((prev) => [...prev, ...nuevas]);
     setSubiendoFotos(false);
     if (inputRef.current) inputRef.current.value = "";
+  }
+
+  function quitarFoto(path: string) {
+    setFotos((prev) => prev.filter((f) => f.path !== path));
   }
 
   async function guardar() {
@@ -98,8 +103,9 @@ export default function AgregarVisitaObraButton({
       fecha_visita: new Date(fecha).toISOString(),
       descripcion_avance: descripcion || null,
       porcentaje_avance_esta_visita: avanceEstaVisita,
-      fotos_avance: fotos,
+      fotos_avance: fotos.map((f) => f.path),
       nota_voz_url: notaVozUrl,
+      carpeta_drive_url: carpetaDriveUrl.trim() || null,
     });
 
     if (avanceEstaVisita > 0) {
@@ -115,6 +121,7 @@ export default function AgregarVisitaObraButton({
     setDescripcion("");
     setPorcentaje("");
     setFotos([]);
+    setCarpetaDriveUrl("");
     setAudioBlob(null);
     setAudioUrl(null);
     router.refresh();
@@ -180,7 +187,7 @@ export default function AgregarVisitaObraButton({
 
               <div>
                 <label className="block text-xs text-text-dim mb-1.5">
-                  Fotos (opcional)
+                  Fotos (opcional — puedes agregar 0, 1, 2 o las que quieras)
                 </label>
                 <input
                   ref={inputRef}
@@ -191,10 +198,21 @@ export default function AgregarVisitaObraButton({
                   onChange={subirFotos}
                 />
                 {fotos.length > 0 && (
-                  <p className="text-text-dim text-xs mb-2">
-                    {fotos.length} foto{fotos.length > 1 ? "s" : ""} lista
-                    {fotos.length > 1 ? "s" : ""}
-                  </p>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {fotos.map((f) => (
+                      <div key={f.path} className="relative w-16 h-16 rounded-lg overflow-hidden border border-border">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={f.preview} alt="" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => quitarFoto(f.path)}
+                          className="absolute top-0.5 right-0.5 bg-black/60 rounded-full p-0.5"
+                        >
+                          <X size={12} className="text-white" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 )}
                 <button
                   type="button"
@@ -209,6 +227,23 @@ export default function AgregarVisitaObraButton({
                   )}
                   {subiendoFotos ? "Subiendo..." : "Agregar fotos"}
                 </button>
+              </div>
+
+              <div>
+                <label className="block text-xs text-text-dim mb-1.5">
+                  O link de carpeta de Drive (opcional)
+                </label>
+                <input
+                  type="url"
+                  value={carpetaDriveUrl}
+                  onChange={(e) => setCarpetaDriveUrl(e.target.value)}
+                  placeholder="https://drive.google.com/drive/folders/..."
+                  className="w-full rounded-lg bg-bg border border-border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                />
+                <p className="text-text-dim text-[11px] mt-1">
+                  Complementario a las fotos de arriba — útil si ya las tienes
+                  organizadas en Drive y no quieres volver a subirlas.
+                </p>
               </div>
 
               <div>
