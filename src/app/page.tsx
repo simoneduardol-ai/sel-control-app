@@ -7,31 +7,56 @@ import { StatusBadge } from "@/components/StatusBadge";
 import Sidebar from "@/components/Sidebar";
 import { StatCard } from "@/components/StatCard";
 import DataTable, { type TableRow } from "@/components/DataTable";
+import ObrasEjecutadasSection from "@/components/ObrasEjecutadasSection";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
 
-  const [visitasRes, cotizacionesRes, obrasRes] = await Promise.all([
-    supabase
-      .from("visitas_terreno")
-      .select("id, fecha, estado, clientes(nombre, direccion)")
-      .in("estado", ["pendiente", "diagrama", "cotizando"])
-      .order("fecha", { ascending: false }),
-    supabase
-      .from("cotizaciones")
-      .select("id, estado, total_materiales, total_mano_obra, total_equipos, created_at, clientes(nombre)")
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("obras_ejecucion")
-      .select("id, estado, avance_porcentaje, created_at, clientes(nombre)")
-      .order("created_at", { ascending: false }),
-  ]);
+  const [visitasRes, cotizacionesRes, obrasRes, obrasVinculadasRes, obrasEjecutadasRes] =
+    await Promise.all([
+      supabase
+        .from("visitas_terreno")
+        .select("id, fecha, estado, clientes(nombre, direccion)")
+        .in("estado", ["pendiente", "diagrama", "cotizando"])
+        .order("fecha", { ascending: false }),
+      supabase
+        .from("cotizaciones")
+        .select("id, estado, total_materiales, total_mano_obra, total_equipos, created_at, clientes(nombre)")
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("obras_ejecucion")
+        .select("id, estado, avance_porcentaje, created_at, clientes(nombre)")
+        .order("created_at", { ascending: false }),
+      // Visitas cuya obra downstream ya arrancó, se pausó o terminó — ya no
+      // son "pendientes" aunque el campo estado de la visita nunca se haya
+      // marcado como cerrada a mano.
+      supabase
+        .from("obras_ejecucion")
+        .select("estado, cotizaciones!inner(visita_id)")
+        .not("cotizaciones.visita_id", "is", null)
+        .in("estado", ["EN_CURSO", "PAUSADA", "FINALIZADA"]),
+      // Últimas obras ejecutadas, para la sección nueva del Tablero.
+      supabase
+        .from("obras_ejecucion")
+        .select("id, avance_porcentaje, updated_at, monto_cotizado, con_iva, clientes(nombre)")
+        .eq("estado", "FINALIZADA")
+        .order("updated_at", { ascending: false }),
+    ]);
 
-  const visitas = visitasRes.data ?? [];
+  const idsVisitaConObraAvanzada = new Set(
+    (obrasVinculadasRes.data ?? [])
+      .map((o) => (o.cotizaciones as unknown as { visita_id: string | null })?.visita_id)
+      .filter(Boolean)
+  );
+
+  const visitas = (visitasRes.data ?? []).filter(
+    (v) => !idsVisitaConObraAvanzada.has(v.id)
+  );
   const cotizaciones = cotizacionesRes.data ?? [];
   const obras = obrasRes.data ?? [];
+  const obrasEjecutadas = obrasEjecutadasRes.data ?? [];
 
   const cotizacionesAbiertas = cotizaciones.filter((c) =>
     ["BORRADOR", "EN_PROVEEDORES", "ENVIADA"].includes(c.estado)
@@ -77,6 +102,16 @@ export default async function DashboardPage() {
     detalle: `${o.avance_porcentaje ?? 0}% de avance`,
     status: o.estado,
     fecha: o.created_at,
+  }));
+
+  const obrasEjecutadasItems = obrasEjecutadas.map((o) => ({
+    id: o.id,
+    cliente:
+      (o.clientes as unknown as { nombre: string } | null)?.nombre ??
+      "Cliente sin nombre",
+    monto:
+      (Number(o.monto_cotizado) || 0) * (o.con_iva ? 1.19 : 1),
+    fecha: o.updated_at,
   }));
 
   return (
@@ -172,6 +207,10 @@ export default async function DashboardPage() {
               columnaDetalle="Avance"
               emptyLabel="Sin obras en curso"
             />
+          </section>
+
+          <section className="mt-8">
+            <ObrasEjecutadasSection items={obrasEjecutadasItems} />
           </section>
         </main>
       </div>
